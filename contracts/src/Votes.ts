@@ -4,8 +4,8 @@ import {
   state,
   State,
   method,
-  PublicKey,
   PrivateKey,
+  PublicKey,
   Poseidon,
   MerkleMapWitness,
   Bool,
@@ -14,13 +14,16 @@ import {
   MerkleWitness,
 } from 'o1js';
 
-import { OffChainStateProofs } from './votingOffchainProofs.js';
+import {
+  OffChainStateProofs,
+  offChainStateChangeStruct,
+} from './votingOffchainProofs.js';
 
 const num_voters = 2; // Total Number of Voters
 const options = 2; // TOtal Number of Options
 
-export class VoterListMerkleWitness extends MerkleWitness(num_voters + 1) {}
-export class VoteCountMerkleWitness extends MerkleWitness(options + 1) {}
+class VoterListMerkleWitness extends MerkleWitness(num_voters + 1) {}
+class VoteCountMerkleWitness extends MerkleWitness(options + 1) {}
 
 export class Votes extends SmartContract {
   @state(Field) votersMerkleRoot = State<Field>();
@@ -48,7 +51,6 @@ export class Votes extends SmartContract {
     this.isInitialized.set(Bool(true));
   }
 
-  // Vote function
   @method vote(
     privKey: PrivateKey,
     voterListWitness: VoterListMerkleWitness,
@@ -103,7 +105,7 @@ export class Votes extends SmartContract {
     this.nullifiersMerkleRoot.set(newNullifierMerkleRoot);
   }
 
-  @method verifyTally(voteProof: OffChainStateProofs) {
+  @method verifyTally(voteProof: offChainStateChangeStruct) {
     const currentVoterListRoot = this.votersMerkleRoot.getAndAssertEquals();
     const currentNullifierMapRoot =
       this.nullifiersMerkleRoot.getAndAssertEquals();
@@ -111,24 +113,9 @@ export class Votes extends SmartContract {
     const currentBallotID = this.votingID.getAndAssertEquals();
 
     // assert that the aggregate proof begins with the correct state variables
-    voteProof.publicInput.votingID.assertEquals(currentBallotID);
-    voteProof.publicInput.votersMerkleRoot.assertEquals(currentVoterListRoot);
-    voteProof.publicInput.nullifierMerkleRoot.assertEquals(
-      currentNullifierMapRoot
-    );
-    voteProof.publicInput.voteCountMerkleRoot.assertEquals(
-      currentVoteCountRoot
-    );
-
-    // Verify the input proof
-    voteProof.verify();
-
-    // apply the state transition if the proof is correct
-    this.voteCountMerkleRoot.set(
-      voteProof.publicInput.modifiedVoteCountMerkleRoot
-    );
-    this.nullifiersMerkleRoot.set(
-      voteProof.publicInput.modifiedNullifierMapMerkleRoot
-    );
+    voteProof.votingID.assertEquals(currentBallotID);
+    voteProof.votersMerkleRoot.assertEquals(currentVoterListRoot);
+    voteProof.nullifierMerkleRoot.assertEquals(currentNullifierMapRoot);
+    voteProof.voteCountMerkleRoot.assertEquals(currentVoteCountRoot);
   }
 }

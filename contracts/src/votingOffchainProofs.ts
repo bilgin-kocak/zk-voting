@@ -17,14 +17,14 @@ const options = 2; // TOtal Number of Options
 class VoterListMerkleWitness extends MerkleWitness(num_voters + 1) {}
 class VoteCountMerkleWitness extends MerkleWitness(options + 1) {}
 
-class votingDataStruct extends Struct({
+export class votingDataStruct extends Struct({
   nullifierHash: Field,
   voteChoice: Field,
   votersMerkleTreeRoot: Field,
   votingID: Field,
 }) {}
 
-class offChainStateChangeStruct extends Struct({
+export class offChainStateChangeStruct extends Struct({
   votingID: Field,
   votersMerkleRoot: Field,
   nullifierMerkleRoot: Field,
@@ -33,7 +33,7 @@ class offChainStateChangeStruct extends Struct({
   modifiedVoteCountMerkleRoot: Field,
 }) {}
 
-const votingDataProof = ZkProgram({
+export const votingDataProof = ZkProgram({
   name: 'votingDataProof',
   publicInput: votingDataStruct,
   methods: {
@@ -68,7 +68,7 @@ const votingDataProof = ZkProgram({
   },
 });
 
-const offChainStateProofs = ZkProgram({
+export const offChainStateProofs = ZkProgram({
   name: 'offChainStateProofs',
   publicInput: offChainStateChangeStruct,
 
