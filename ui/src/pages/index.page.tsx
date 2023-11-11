@@ -44,7 +44,11 @@ export default function Home() {
         setDisplayText('Done loading web worker');
         console.log('Done loading web worker');
 
-        await zkappWorkerClient.setActiveInstanceToBerkeley();
+        // await zkappWorkerClient.setActiveInstanceToBerkeley();
+
+        await zkappWorkerClient.setOffchainInstance();
+
+        await zkappWorkerClient.setLocalInstance();
 
         const mina = (window as any).mina;
 
@@ -67,37 +71,54 @@ export default function Home() {
         });
         const accountExists = res.error == null;
 
-        await zkappWorkerClient.loadContract();
+        console.log(`Account exists: ${accountExists}`);
+        console.log('res', res);
 
-        console.log('Compiling zkApp...');
-        setDisplayText('Compiling zkApp...');
-        await zkappWorkerClient.compileContract();
-        console.log('zkApp compiled');
-        setDisplayText('zkApp compiled...');
+        await zkappWorkerClient.doInitialStuff();
+
+        // await zkappWorkerClient.loadContract();
+
+        // console.log('Compiling zkApp...');
+        // setDisplayText('Compiling zkApp...');
+        // await zkappWorkerClient.compileContract();
+        // console.log('zkApp compiled');
+        // setDisplayText('zkApp compiled...');
 
         const zkappPublicKey = PublicKey.fromBase58(
-          'B62qo2Be4Udo5EG1ux9yMJVkXe9Gz945cocN7Bn4W9DSYyeHZr1C3Ea'
+          'B62qphryFD6whUkrnHfiArCgrJnGX4WeVmJaHYmVyZZu86JvaU15vPR'
         );
 
-        await zkappWorkerClient.initZkappInstance(zkappPublicKey);
+        console.log('Deploying zkApp...');
+        setDisplayText('Deploying zkApp...');
+        await zkappWorkerClient.deployContract();
+        console.log('zkApp deployed');
+        setDisplayText('zkApp deployed...');
 
-        console.log('Getting zkApp state...');
-        setDisplayText('Getting zkApp state...');
-        await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey });
-        const currentNum = await zkappWorkerClient.getNum();
-        console.log(`Current state in zkApp: ${currentNum.toString()}`);
-        setDisplayText('');
+        // console.log('Initializing zkApp instance...');
+        // setDisplayText('Initializing zkApp instance...');
+        // await zkappWorkerClient.initState();
+        // console.log('zkApp instance initialized');
+        // setDisplayText('zkApp instance initialized...');
 
-        setState({
-          ...state,
-          zkappWorkerClient,
-          hasWallet: true,
-          hasBeenSetup: true,
-          publicKey,
-          zkappPublicKey,
-          accountExists,
-          currentNum,
-        });
+        // await zkappWorkerClient.initZkappInstance(zkappPublicKey);
+
+        // console.log('Getting zkApp state...');
+        // setDisplayText('Getting zkApp state...');
+        // await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey });
+        // const currentNum = await zkappWorkerClient.getNum();
+        // console.log(`Current state in zkApp: ${currentNum.toString()}`);
+        // setDisplayText('');
+
+        // setState({
+        //   ...state,
+        //   zkappWorkerClient,
+        //   hasWallet: true,
+        //   hasBeenSetup: true,
+        //   publicKey,
+        //   zkappPublicKey,
+        //   accountExists,
+        //   currentNum,
+        // });
       }
     })();
   }, []);
@@ -138,50 +159,50 @@ export default function Home() {
       publicKey: state.publicKey!,
     });
 
-    await state.zkappWorkerClient!.createUpdateTransaction();
+    // await state.zkappWorkerClient!.createUpdateTransaction();
 
-    setDisplayText('Creating proof...');
-    console.log('Creating proof...');
-    await state.zkappWorkerClient!.proveUpdateTransaction();
+    // setDisplayText('Creating proof...');
+    // console.log('Creating proof...');
+    // await state.zkappWorkerClient!.proveUpdateTransaction();
 
-    console.log('Requesting send transaction...');
-    setDisplayText('Requesting send transaction...');
-    const transactionJSON = await state.zkappWorkerClient!.getTransactionJSON();
+    // console.log('Requesting send transaction...');
+    // setDisplayText('Requesting send transaction...');
+    // const transactionJSON = await state.zkappWorkerClient!.getTransactionJSON();
 
-    setDisplayText('Getting transaction JSON...');
-    console.log('Getting transaction JSON...');
-    const { hash } = await (window as any).mina.sendTransaction({
-      transaction: transactionJSON,
-      feePayer: {
-        fee: transactionFee,
-        memo: '',
-      },
-    });
+    // setDisplayText('Getting transaction JSON...');
+    // console.log('Getting transaction JSON...');
+    // const { hash } = await (window as any).mina.sendTransaction({
+    //   transaction: transactionJSON,
+    //   feePayer: {
+    //     fee: transactionFee,
+    //     memo: '',
+    //   },
+    // });
 
-    const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
-    console.log(`View transaction at ${transactionLink}`);
+    // const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+    // console.log(`View transaction at ${transactionLink}`);
 
-    setTransactionLink(transactionLink);
-    setDisplayText(transactionLink);
+    // setTransactionLink(transactionLink);
+    // setDisplayText(transactionLink);
 
-    setState({ ...state, creatingTransaction: false });
+    // setState({ ...state, creatingTransaction: false });
   };
 
   // -------------------------------------------------------
   // Refresh the current state
 
-  const onRefreshCurrentNum = async () => {
-    console.log('Getting zkApp state...');
-    setDisplayText('Getting zkApp state...');
+  // const onRefreshCurrentNum = async () => {
+  //   console.log('Getting zkApp state...');
+  //   setDisplayText('Getting zkApp state...');
 
-    await state.zkappWorkerClient!.fetchAccount({
-      publicKey: state.zkappPublicKey!,
-    });
-    const currentNum = await state.zkappWorkerClient!.getNum();
-    setState({ ...state, currentNum });
-    console.log(`Current state in zkApp: ${currentNum.toString()}`);
-    setDisplayText('');
-  };
+  //   await state.zkappWorkerClient!.fetchAccount({
+  //     publicKey: state.zkappPublicKey!,
+  //   });
+  //   const currentNum = await state.zkappWorkerClient!.getNum();
+  //   setState({ ...state, currentNum });
+  //   console.log(`Current state in zkApp: ${currentNum.toString()}`);
+  //   setDisplayText('');
+  // };
 
   // -------------------------------------------------------
   // Create UI elements
@@ -243,9 +264,9 @@ export default function Home() {
         >
           Send Transaction
         </button>
-        <button className={styles.card} onClick={onRefreshCurrentNum}>
+        {/* <button className={styles.card} onClick={onRefreshCurrentNum}>
           Get Latest State
-        </button>
+        </button> */}
       </div>
     );
   }

@@ -13,6 +13,26 @@ export default class ZkappWorkerClient {
     return this._call('setActiveInstanceToBerkeley', {});
   }
 
+  setLocalInstance() {
+    return this._call('setLocalInstance', {});
+  }
+
+  setOffchainInstance() {
+    return this._call('setOffChainInstance', {});
+  }
+
+  deployContract() {
+    return this._call('deployContract', {});
+  }
+
+  initState() {
+    return this._call('initState', {});
+  }
+
+  doInitialStuff() {
+    return this._call('doInitialStuff', {});
+  }
+
   loadContract() {
     return this._call('loadContract', {});
   }
@@ -38,14 +58,29 @@ export default class ZkappWorkerClient {
     });
   }
 
-  async getNum(): Promise<Field> {
-    const result = await this._call('getNum', {});
+  // async getNum(): Promise<Field> {
+  //   const result = await this._call('getNum', {});
+  //   return Field.fromJSON(JSON.parse(result as string));
+  // }
+
+  async getNullifiersMerkleRoot(): Promise<Field> {
+    const result = await this._call('getNullifiersMerkleRoot', {});
     return Field.fromJSON(JSON.parse(result as string));
   }
 
-  createUpdateTransaction() {
-    return this._call('createUpdateTransaction', {});
+  async getVoteCountMerkleRoot(): Promise<Field> {
+    const result = await this._call('getVoteCountMerkleRoot', {});
+    return Field.fromJSON(JSON.parse(result as string));
   }
+
+  async getVotingID(): Promise<Field> {
+    const result = await this._call('getVotingID', {});
+    return Field.fromJSON(JSON.parse(result as string));
+  }
+
+  // createUpdateTransaction() {
+  //   return this._call('createUpdateTransaction', {});
+  // }
 
   proveUpdateTransaction() {
     return this._call('proveUpdateTransaction', {});
