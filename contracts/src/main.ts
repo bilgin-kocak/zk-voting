@@ -358,7 +358,7 @@ console.log('zkApp initialized');
       console.log('The merkle tree of the vote count is:');
       displayTree(offChainInstance.voteCountMerkleTree);
       console.log('Voting Results:');
-      console.log('Option 1: 2 \nOption 2: 0');
+      console.log('Option 1: 2 \nOption 2: 1');
     }
   } catch (err: any) {
     console.error('Error:', err.message);
