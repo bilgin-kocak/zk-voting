@@ -1,4 +1,4 @@
-# Mina zkApp: 04 Zkapp Browser Ui
+# Mina zkApp: zk-voting app
 
 This template uses TypeScript.
 
