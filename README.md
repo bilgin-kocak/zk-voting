@@ -7,6 +7,8 @@ We have deployed our smart contract on Berkeley Testnet. You can see the transac
 
 We plan to prepare a frontend for our zkapp, we encounter some issues using Berkeley Testnet. For now you can ignore ui folder.
 
+You can find presentation and demo usage of zk-woting [here](https://www.canva.com/design/DAFz25aDDxM/ZBTmh2Tg1Hb3F4BLIucvBw/edit?utm_content=DAFz25aDDxM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
 ## License
 
 [Apache-2.0](LICENSE)
