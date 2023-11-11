@@ -14,6 +14,8 @@ import {
   MerkleWitness,
 } from 'o1js';
 
+import { OffChainStateProofs } from './votingOffchainProofs.js';
+
 const num_voters = 2; // Total Number of Voters
 const options = 2; // TOtal Number of Options
 
@@ -99,5 +101,34 @@ export class Votes extends SmartContract {
       Field(1)
     );
     this.nullifiersMerkleRoot.set(newNullifierMerkleRoot);
+  }
+
+  @method verifyTally(voteProof: OffChainStateProofs) {
+    const currentVoterListRoot = this.votersMerkleRoot.getAndAssertEquals();
+    const currentNullifierMapRoot =
+      this.nullifiersMerkleRoot.getAndAssertEquals();
+    const currentVoteCountRoot = this.voteCountMerkleRoot.getAndAssertEquals();
+    const currentBallotID = this.votingID.getAndAssertEquals();
+
+    // assert that the aggregate proof begins with the correct state variables
+    voteProof.publicInput.votingID.assertEquals(currentBallotID);
+    voteProof.publicInput.votersMerkleRoot.assertEquals(currentVoterListRoot);
+    voteProof.publicInput.nullifierMerkleRoot.assertEquals(
+      currentNullifierMapRoot
+    );
+    voteProof.publicInput.voteCountMerkleRoot.assertEquals(
+      currentVoteCountRoot
+    );
+
+    // Verify the input proof
+    voteProof.verify();
+
+    // apply the state transition if the proof is correct
+    this.voteCountMerkleRoot.set(
+      voteProof.publicInput.modifiedVoteCountMerkleRoot
+    );
+    this.nullifiersMerkleRoot.set(
+      voteProof.publicInput.modifiedNullifierMapMerkleRoot
+    );
   }
 }
