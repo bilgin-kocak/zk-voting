@@ -5,6 +5,7 @@ import {
   State,
   method,
   PublicKey,
+  PrivateKey,
   Poseidon,
   MerkleMapWitness,
   Bool,
@@ -43,5 +44,60 @@ export class Votes extends SmartContract {
     this.votersMerkleRoot.set(votersMerkleTree);
     this.votingID.set(votingID);
     this.isInitialized.set(Bool(true));
+  }
+
+  // Vote function
+  @method vote(
+    privKey: PrivateKey,
+    voterListWitness: VoterListMerkleWitness,
+    nullifierWitness: MerkleMapWitness,
+    voteCountWitness: VoteCountMerkleWitness,
+    prevVoteCount: Field
+  ) {
+    // After initialisation, allow voting
+    this.isInitialized.assertEquals(Bool(true));
+
+    const currentVoteCountRoot = this.voteCountMerkleRoot.getAndAssertEquals();
+    const currentNullifierRoot = this.nullifiersMerkleRoot.getAndAssertEquals();
+    const currentVotersRoot = this.votersMerkleRoot.getAndAssertEquals();
+    const currentVotingID = this.votingID.getAndAssertEquals();
+
+    // Authentication of the voter
+    const leafVoter = Poseidon.hash(privKey.toPublicKey().toFields());
+    leafVoter.assertEquals(Poseidon.hash(privKey.toPublicKey().toFields()));
+
+    const calculatedMerkleRoot = voterListWitness.calculateRoot(leafVoter);
+    this.votersMerkleRoot.assertEquals(calculatedMerkleRoot);
+
+    // Check if the voter has already voted
+    const nullifierHash = Poseidon.hash(
+      privKey.toFields().concat([currentVotingID])
+    );
+
+    nullifierHash.assertEquals(
+      Poseidon.hash(privKey.toFields().concat([currentVotingID]))
+    );
+
+    // Check if the voter has already voted
+    const [calculatedNullifierMerkleRoot, calculatedNullifierKey] =
+      nullifierWitness.computeRootAndKey(Field(0));
+    currentNullifierRoot.assertEquals(calculatedNullifierMerkleRoot);
+    calculatedNullifierKey.assertEquals(nullifierHash);
+
+    // Check previous vote count is correct
+    const calculatedVoteCountMerkleRoot =
+      voteCountWitness.calculateRoot(prevVoteCount);
+    this.voteCountMerkleRoot.assertEquals(calculatedVoteCountMerkleRoot);
+
+    // Do voting and update the state of root of vote count merkle tree
+    this.voteCountMerkleRoot.set(
+      voteCountWitness.calculateRoot(prevVoteCount.add(1))
+    );
+
+    // Update the state of root of nullifier merkle tree to avoid double voting
+    const [newNullifierMerkleRoot, _] = nullifierWitness.computeRootAndKey(
+      Field(1)
+    );
+    this.nullifiersMerkleRoot.set(newNullifierMerkleRoot);
   }
 }
