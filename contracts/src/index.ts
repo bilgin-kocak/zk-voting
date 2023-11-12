@@ -1,3 +1,3 @@
-import { Add } from './Add.js';
+import { Votes } from './Votes.js';
 
-export { Add };
+export { Votes };

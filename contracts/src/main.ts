@@ -101,6 +101,8 @@ await deployTxn.sign([deployerKey, zkAppPrivateKey]).send();
 }
 console.log('zkApp initialized');
 
+console.log('\nvoteCountMerkleTree After Initilization: ');
+displayTree(offChainInstance.voteCountMerkleTree);
 {
   // USER 1 TRIES TO VOTE (Successful Voting)
   console.log('\n User 1 tries to vote for option 0');
@@ -146,6 +148,9 @@ console.log('zkApp initialized');
   }
 }
 
+console.log('\nvoteCountMerkleTree After Vote of User 1: ');
+displayTree(offChainInstance.voteCountMerkleTree);
+
 {
   // USER 2 TRIES TO VOTE (Successful Voting)
   console.log('\n User 2 tries to vote for option 0');
@@ -190,6 +195,9 @@ console.log('zkApp initialized');
     console.error('Error:', err.message);
   }
 }
+
+console.log('\nvoteCountMerkleTree After Vote of User 2: ');
+displayTree(offChainInstance.voteCountMerkleTree);
 
 {
   // USER 2 TRIES TO VOTE AGAIN (Voting Fails)
@@ -237,6 +245,9 @@ console.log('zkApp initialized');
   }
 }
 
+console.log('\nvoteCountMerkleTree After Second Vote of User 2: ');
+displayTree(offChainInstance.voteCountMerkleTree);
+
 {
   // USER 3 TRIES TO VOTE WITH WRONG PRIVATE KEY (Voting Fails)
   console.log('\n User 3 tries to vote with wrong private key. It must fail');
@@ -281,6 +292,9 @@ console.log('zkApp initialized');
     console.error('Error:', err.message);
   }
 }
+
+console.log('\nvoteCountMerkleTree After Vote of User 3: ');
+displayTree(offChainInstance.voteCountMerkleTree);
 
 {
   // USER 4 TRIES TO VOTE (Successful Voting)
@@ -330,6 +344,9 @@ console.log('zkApp initialized');
   }
 }
 
+console.log('\nvoteCountMerkleTree After Vote of User 4: ');
+displayTree(offChainInstance.voteCountMerkleTree);
+
 {
   // USER TRIES TO TALLY (Successful Voting)
 
@@ -357,7 +374,7 @@ console.log('zkApp initialized');
       console.log('Tally verified successfully');
       console.log('The merkle tree of the vote count is:');
       displayTree(offChainInstance.voteCountMerkleTree);
-      console.log('Voting Results:');
+      console.log('\nVoting Results:');
       console.log('Option 1: 2 \nOption 2: 1');
     }
   } catch (err: any) {
