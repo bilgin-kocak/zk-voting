@@ -11,7 +11,7 @@ You can find presentation and demo usage of zk-woting [here](https://www.canva.c
 
 ### System Diagram
 
-![Diagram](https://mermaid.live/view#pako:eNptU81OwzAMfhUrBwTS9gI9IAHbYeJHaBs79RISr42WJiVxQGXi3UmTrhtjPVSp7e_HrrNnwkpkBfP4EdAInCleOd6UBuLTckdKqJYbgo0ldMA9lCwdS_a_5i5QbZ2iLtctsVKeHCdlzTF3CRgZlalWnSdsRo0YgRy6BLnXVuxEzZXJgJPvJ5TVZYMbdGqrDn28hnetxBg8API7NTm9vR19F5D7ieirjOlgIdFQ31OCjKURluAFLLwPCN-76erlbvkIDw4Tguu_Iqf9F_DAfZ43fCmqj-hXZ-02ir8ErbPjA8kIjlzHQfSOhXUS5ka4riWUmfUK3lrJ4-EZ3U4jrB1iptLWtrDhWqV0X-xz4oLOmecaxe7ozEeRGSbVUxo0cvA8zPzM7zDWuUaRlmZhCKu0UNeD16W1NDkbiZ_AmmvdwWdiFWnhbtiENegarmRc730vWzKqscGSFfEoccuDpv6n_8RSHsiuOiNYQS7ghIU0oeE2_A3OpSLrWLHl2uPPL7lSIGQ)
+![image](https://user-images.githubusercontent.com/30844607/282285699-87ad5545-148f-44f4-8371-65c6091cccdb.png)
 
 ## License
 
