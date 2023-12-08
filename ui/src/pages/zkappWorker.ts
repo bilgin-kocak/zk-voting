@@ -147,18 +147,17 @@ const functions = {
     console.log('zkApp deployed');
     await deployTxn.sign([deployerKey, zkAppPrivateKey]).send();
 
-    // dispAllVar(zkAppInstance);
+    console.log('zkApp deployed-');
 
-    {
-      const txn = await Mina.transaction(deployerAccount, () => {
-        zkAppInstance.initState(
-          Field.random(), // votingID
-          state.offChainInstance!.votersMerkleTree.getRoot() // Save the root of the voter list Merkle tree
-        );
-      });
-      await txn.prove();
-      await txn.sign([deployerKey]).send();
-    }
+    const txn = await Mina.transaction(deployerAccount, () => {
+      zkAppInstance.initState(
+        Field.random(), // votingID
+        state.offChainInstance!.votersMerkleTree.getRoot() // Save the root of the voter list Merkle tree
+      );
+    });
+    await txn.prove();
+    await txn.sign([deployerKey]).send();
+
     console.log('zkApp initialized');
   },
   // getNum: async (args: {}) => {
