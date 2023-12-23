@@ -145,9 +145,9 @@ export default function Content() {
         const zkappPublicKeyImported =
           process.env.NEXT_PUBLIC_ZK_APP_PUBLIC_KEY!;
 
-        /*const zkappPublicKeyImported = (
-            await import("@/contracts/keys/berkeley.json")
-          ).publicKey;*/
+        // /*const zkappPublicKeyImported = (
+        //     await import("@/contracts/keys/berkeley.json")
+        //   ).publicKey;*/
 
         const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
@@ -155,6 +155,8 @@ export default function Content() {
         console.log('Getting zkApp state...');
 
         await zkappWorkerClient.fetchAccount({ publicKey: zkappPublicKey });
+
+        console.log('zkApp state fetched');
 
         setState({
           ...state,
@@ -186,6 +188,12 @@ export default function Content() {
         }}
         isError={alert.error}
       />
+      <>
+        <h1 className={styles.title}>Mina Ballot</h1>
+        <p className={styles.description}>
+          Cast your vote for the Mina Foundation Board of Directors
+        </p>
+      </>
       <Candidates
         onCastVote={(num) => {
           setCandidate(num);
