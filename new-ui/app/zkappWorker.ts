@@ -4,7 +4,9 @@ import {
   fetchAccount,
   UInt32,
   Field,
-  OffChainStorage,
+  Poseidon,
+  MerkleTree,
+  MerkleMap,
 } from 'o1js';
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
@@ -30,6 +32,25 @@ const votableAdresses = [
   'B62qjSfWdftx3W27jvzFFaxsK1oeyryWibUcP8TqSWYAi4Q5JJJXjp1',
   'B62qjSfWdftx3W27jvzFFaxsK1oeyryWibUcP8TqSWYAi4Q5JJJXjp1',
 ];
+
+class OffChainStorage {
+  readonly votersMerkleTree: MerkleTree;
+  voteCountMerkleTree: MerkleTree;
+  nullifierMerkleMap: MerkleMap;
+
+  constructor(num_voters: number, options: number, voters: Field[]) {
+    this.votersMerkleTree = new MerkleTree(num_voters + 1);
+    this.voteCountMerkleTree = new MerkleTree(options + 1);
+    this.nullifierMerkleMap = new MerkleMap();
+    this.votersMerkleTree.fill(voters);
+  }
+
+  updateOffChainState(nullifierHash: Field, voteOption: bigint) {
+    this.nullifierMerkleMap.set(nullifierHash, Field(1));
+    const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
+    this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
+  }
+}
 
 // ---------------------------------------------------------------------------------------
 

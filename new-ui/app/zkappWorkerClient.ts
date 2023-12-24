@@ -38,6 +38,10 @@ export default class ZkappWorkerClient {
     });
   }
 
+  setOffchainInstance() {
+    return this._call('setOffChainInstance', {});
+  }
+
   initState() {
     return this._call('initState', {});
   }

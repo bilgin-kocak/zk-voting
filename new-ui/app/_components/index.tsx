@@ -159,6 +159,8 @@ export default function Content() {
 
         console.log('Initializing zkApp...');
 
+        await zkappWorkerClient.setOffchainInstance();
+
         await zkappWorkerClient.initState();
 
         console.log('Creating proof...');
