@@ -6,7 +6,6 @@ import type ZkappWorkerClient from '../zkappWorkerClient';
 import { Button } from '@/components/button/Button';
 import { Alert } from '@/components/alert/Alert';
 import Candidates from './candidates/candidates';
-import Link from 'next/link';
 import { useLocalStorage } from '@/hooks';
 
 let transactionFee = 0.1;
@@ -158,6 +157,30 @@ export default function Content() {
 
         console.log('zkApp state fetched');
 
+        console.log('Initializing zkApp...');
+
+        await zkappWorkerClient.initState();
+
+        console.log('Creating proof...');
+        await state.zkappWorkerClient!.proveTransaction();
+
+        console.log('Requesting send transaction...');
+        const transactionJSON =
+          await state.zkappWorkerClient!.getTransactionJSON();
+
+        console.log('Getting transaction JSON...');
+        const { hash } = await (window as any).mina.sendTransaction({
+          transaction: transactionJSON,
+          feePayer: {
+            fee: transactionFee,
+            memo: '',
+          },
+        });
+
+        const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+        console.log(`View transaction at ${transactionLink}`);
+
+        console.log('ZkApp initialized');
         setState({
           ...state,
           zkappWorkerClient,

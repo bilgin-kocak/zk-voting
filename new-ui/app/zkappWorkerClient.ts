@@ -38,6 +38,10 @@ export default class ZkappWorkerClient {
     });
   }
 
+  initState() {
+    return this._call('initState', {});
+  }
+
   // async getBallot(): Promise<any> {
   //   const result = await this._call("getBallot", {});
   //   return JSON.parse(result as string);
