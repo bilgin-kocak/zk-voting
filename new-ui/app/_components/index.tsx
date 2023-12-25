@@ -157,30 +157,36 @@ export default function Content() {
 
         console.log('zkApp state fetched');
 
+        await zkappWorkerClient.loadContract();
+
         console.log('Initializing zkApp...');
 
-        await zkappWorkerClient.setOffchainInstance();
+        const isInitialized = await zkappWorkerClient.getIsInitialized();
+        console.log('isInitialized', isInitialized);
 
-        await zkappWorkerClient.initState();
+        if (!isInitialized) {
+          await zkappWorkerClient.setOffchainInstance();
 
-        console.log('Creating proof...');
-        await state.zkappWorkerClient!.proveTransaction();
+          await zkappWorkerClient.initState();
 
-        console.log('Requesting send transaction...');
-        const transactionJSON =
-          await state.zkappWorkerClient!.getTransactionJSON();
+          console.log('Creating proof...');
+          await zkappWorkerClient!.proveTransaction();
 
-        console.log('Getting transaction JSON...');
-        const { hash } = await (window as any).mina.sendTransaction({
-          transaction: transactionJSON,
-          feePayer: {
-            fee: transactionFee,
-            memo: '',
-          },
-        });
+          console.log('Requesting send transaction...');
+          const transactionJSON = await zkappWorkerClient!.getTransactionJSON();
 
-        const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
-        console.log(`View transaction at ${transactionLink}`);
+          console.log('Getting transaction JSON...');
+          const { hash } = await (window as any).mina.sendTransaction({
+            transaction: transactionJSON,
+            feePayer: {
+              fee: transactionFee,
+              memo: '',
+            },
+          });
+
+          const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+          console.log(`View transaction at ${transactionLink}`);
+        }
 
         console.log('ZkApp initialized');
         setState({

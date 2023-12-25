@@ -78,6 +78,11 @@ const functions = {
     state.zkapp = new state.Votes!(publicKey);
   },
 
+  getIsInitialized: async (args: {}) => {
+    const isInitialized = await state.zkapp!.isInitialized.get();
+    return JSON.stringify(isInitialized);
+  },
+
   setOffChainInstance: async (args: {}) => {
     const publicKeyHashes: Field[] = votableAdresses.map((key) =>
       Poseidon.hash(PublicKey.fromBase58(key).toFields())
