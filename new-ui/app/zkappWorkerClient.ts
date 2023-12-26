@@ -1,4 +1,4 @@
-import { fetchAccount, PublicKey, Field } from 'o1js';
+import { fetchAccount, PublicKey, Field, PrivateKey } from 'o1js';
 
 import type {
   ZkappWorkerRequest,
@@ -48,6 +48,16 @@ export default class ZkappWorkerClient {
 
   initState() {
     return this._call('initState', {});
+  }
+
+  getVotingID() {
+    return this._call('getVotingID', {});
+  }
+
+  castVote({ voteOption }: { voteOption: number }): Promise<any> {
+    return this._call('castVote', {
+      voteOption,
+    });
   }
 
   // async getBallot(): Promise<any> {

@@ -7,6 +7,7 @@ import {
   Poseidon,
   MerkleTree,
   MerkleMap,
+  PrivateKey,
 } from 'o1js';
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
@@ -101,6 +102,42 @@ const functions = {
       state.zkapp!.initState(
         Field.random(), // votingID
         state.offChainInstance!.votersMerkleTree.getRoot() // Save the root of the voter list Merkle tree
+      );
+    });
+    state.transaction = transaction;
+  },
+
+  getVotingID: async (args: {}) => {
+    const votingID = await state.zkapp!.votingID.get();
+    return JSON.stringify(votingID);
+  },
+
+  castVote: async (args: { voteOption: number }) => {
+    const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
+    const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
+    const nullifierMerkleMap = state.offChainInstance!.nullifierMerkleMap;
+
+    // TODO: change contract to accept public key instead of private key
+
+    // Create Witness
+    const option = BigInt(args.voteOption);
+    const votersWitness = votersMerkleTree.getWitness(option);
+    const votingID: Field = await state.zkapp!.votingID.get();
+    const nullifierHash = Poseidon.hash(
+      args.privateKey.toFields().concat([votingID])
+    );
+    const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
+
+    const voteCountsWitness = voteCountMerkleTree.getWitness(option);
+    const currentVotes = voteCountMerkleTree.getNode(0, option);
+
+    const transaction = await Mina.transaction(() => {
+      state.zkapp!.vote(
+        args.privateKey,
+        votersWitness,
+        nullifierWitness,
+        voteCountsWitness,
+        currentVotes
       );
     });
     state.transaction = transaction;
