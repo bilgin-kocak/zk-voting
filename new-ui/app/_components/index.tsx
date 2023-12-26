@@ -67,14 +67,16 @@ export default function Content() {
         publicKey: state.publicKey!,
       });
 
-      // await state.zkappWorkerClient!.cast(candidate);
+      await state.zkappWorkerClient!.castVote({
+        voteOption: 0,
+      });
 
-      // console.log('Creating proof...');
-      // await state.zkappWorkerClient!.proveTransaction();
+      console.log('Creating proof...');
+      await state.zkappWorkerClient!.proveTransaction();
 
-      // console.log('Requesting send transaction...');
-      // const transactionJSON =
-      //   await state.zkappWorkerClient!.getTransactionJSON();
+      console.log('Requesting send transaction...');
+      const transactionJSON =
+        await state.zkappWorkerClient!.getTransactionJSON();
 
       // console.log('Getting transaction JSON...');
       // const { hash } = await (window as any).mina.sendTransaction({
@@ -164,9 +166,9 @@ export default function Content() {
         const isInitialized = await zkappWorkerClient.getIsInitialized();
         console.log('isInitialized', isInitialized);
 
-        if (!isInitialized) {
-          await zkappWorkerClient.setOffchainInstance();
+        await zkappWorkerClient.setOffchainInstance();
 
+        if (!isInitialized) {
           await zkappWorkerClient.initState();
 
           console.log('Creating proof...');
@@ -186,6 +188,10 @@ export default function Content() {
 
           const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
           console.log(`View transaction at ${transactionLink}`);
+        } else {
+          const currentVotingID = await zkappWorkerClient.getVotingID();
+
+          console.log('currentVotingID', currentVotingID);
         }
 
         console.log('ZkApp initialized');
