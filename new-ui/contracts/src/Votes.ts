@@ -12,6 +12,8 @@ import {
   MerkleMap,
   MerkleTree,
   MerkleWitness,
+  Nullifier,
+  Circuit,
 } from 'o1js';
 
 import {
@@ -52,7 +54,8 @@ export class Votes extends SmartContract {
   }
 
   @method vote(
-    privKey: PrivateKey,
+    publicKey: PublicKey,
+    nullifier: Nullifier,
     voterListWitness: VoterListMerkleWitness,
     nullifierWitness: MerkleMapWitness,
     voteCountWitness: VoteCountMerkleWitness,
@@ -66,27 +69,21 @@ export class Votes extends SmartContract {
     const currentVotersRoot = this.votersMerkleRoot.getAndAssertEquals();
     const currentVotingID = this.votingID.getAndAssertEquals();
 
+    // we compute the current root and make sure the entry is set to 0 (= unused)
+    nullifier.assertUnused(nullifierWitness, currentNullifierRoot);
+
     // Authentication of the voter
-    const leafVoter = Poseidon.hash(privKey.toPublicKey().toFields());
-    leafVoter.assertEquals(Poseidon.hash(privKey.toPublicKey().toFields()));
+    const leafVoter = Poseidon.hash(publicKey.toFields());
+    leafVoter.assertEquals(Poseidon.hash(publicKey.toFields()));
 
     const calculatedMerkleRoot = voterListWitness.calculateRoot(leafVoter);
     this.votersMerkleRoot.assertEquals(calculatedMerkleRoot);
 
-    // Check if the voter has already voted
-    const nullifierHash = Poseidon.hash(
-      privKey.toFields().concat([currentVotingID])
-    );
+    // we set the nullifier to 1 (= used) and calculate the new root
+    let newRoot = nullifier.setUsed(nullifierWitness);
 
-    nullifierHash.assertEquals(
-      Poseidon.hash(privKey.toFields().concat([currentVotingID]))
-    );
-
-    // Check if the voter has already voted
-    const [calculatedNullifierMerkleRoot, calculatedNullifierKey] =
-      nullifierWitness.computeRootAndKey(Field(0));
-    currentNullifierRoot.assertEquals(calculatedNullifierMerkleRoot);
-    calculatedNullifierKey.assertEquals(nullifierHash);
+    // we update the on-chain root
+    this.nullifiersMerkleRoot.set(newRoot);
 
     // Check previous vote count is correct
     const calculatedVoteCountMerkleRoot =
