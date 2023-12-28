@@ -54,7 +54,6 @@ export class Votes extends SmartContract {
   }
 
   @method vote(
-    publicKey: PublicKey,
     nullifier: Nullifier,
     voterListWitness: VoterListMerkleWitness,
     nullifierWitness: MerkleMapWitness,
@@ -71,6 +70,9 @@ export class Votes extends SmartContract {
 
     // we compute the current root and make sure the entry is set to 0 (= unused)
     nullifier.assertUnused(nullifierWitness, currentNullifierRoot);
+
+    // Get public key from the nullifier
+    const publicKey = nullifier.getPublicKey();
 
     // Authentication of the voter
     const leafVoter = Poseidon.hash(publicKey.toFields());

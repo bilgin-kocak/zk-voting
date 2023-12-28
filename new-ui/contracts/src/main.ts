@@ -9,6 +9,10 @@ import {
   Poseidon,
   UInt32,
   MerkleWitness,
+  Nullifier,
+  Circuit,
+  MerkleMapWitness,
+  Provable,
 } from 'o1js';
 
 import { Votes } from './Votes.js';
@@ -39,16 +43,25 @@ class OffChainStorage {
   readonly votersMerkleTree: MerkleTree;
   voteCountMerkleTree: MerkleTree;
   nullifierMerkleMap: MerkleMap;
+  nullifier: Nullifier;
 
-  constructor(num_voters: number, options: number, voters: Field[]) {
+  constructor(
+    num_voters: number,
+    options: number,
+    voters: Field[],
+    nullifier: Nullifier
+  ) {
     this.votersMerkleTree = new MerkleTree(num_voters + 1);
     this.voteCountMerkleTree = new MerkleTree(options + 1);
     this.nullifierMerkleMap = new MerkleMap();
+    this.nullifier = nullifier;
     this.votersMerkleTree.fill(voters);
   }
 
-  updateOffChainState(nullifierHash: Field, voteOption: bigint) {
-    this.nullifierMerkleMap.set(nullifierHash, Field(1));
+  updateOffChainState(nullifier: Nullifier, voteOption: bigint) {
+    // this.nullifierMerkleMap.set(nullifierHash, Field(1));
+    this.nullifierMerkleMap.set(nullifier.key(), Field(1));
+    this.nullifier = nullifier;
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
     this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
   }
@@ -58,10 +71,29 @@ let publicKeyHashes: Field[] = publicKeys.map((key) =>
   Poseidon.hash(key.toFields())
 );
 
+console.log('generating nullifier');
+
+// a special account that is allowed to pull out half of the zkapp balance, once
+let privilegedKey = privateKeys[0];
+let privilegedAddress = privilegedKey.toPublicKey();
+
+// a unique message
+let nullifierMessage = Field(5);
+
+let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+console.log(jsonNullifier);
+
+const nullifier = Nullifier.fromJSON(jsonNullifier);
+
+// let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+//   offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
+// );
+
 let offChainInstance = new OffChainStorage(
   num_voters,
   options,
-  publicKeyHashes
+  publicKeyHashes,
+  nullifier
 );
 
 // ZkApp deployment
@@ -113,11 +145,15 @@ displayTree(offChainInstance.voteCountMerkleTree);
   );
   const votingID = zkAppInstance.votingID.get();
 
-  const nullifierHash = Poseidon.hash(
-    privateKeys[0].toFields().concat([votingID])
+  // const nullifierHash = Poseidon.hash(
+  //   privateKeys[0].toFields().concat([votingID])
+  // );
+  // const nullifierWitness =
+  //   offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
+
+  let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+    offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
   );
-  const nullifierWitness =
-    offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
 
   const option = 0n;
   const voteCountsWitness = new VoteCountMerkleWitness(
@@ -129,7 +165,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
   try {
     const txn = await Mina.transaction(deployerAccount, () => {
       zkAppInstance.vote(
-        privateKeys[0],
+        Nullifier.fromJSON(jsonNullifier),
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
@@ -141,7 +177,10 @@ displayTree(offChainInstance.voteCountMerkleTree);
     const txnResult = await txn.sign([deployerKey]).send();
     // Update the offchain state
     if (txnResult.isSuccess) {
-      offChainInstance.updateOffChainState(nullifierHash, option);
+      // offChainInstance.updateOffChainState(nullifierHash, option);
+      nullifier.setUsed(nullifierWitness);
+      offChainInstance.nullifier = nullifier;
+      offChainInstance.updateOffChainState(nullifier, option);
     }
   } catch (err: any) {
     console.error('Error:', err.message);
@@ -161,11 +200,20 @@ displayTree(offChainInstance.voteCountMerkleTree);
   const votingID = zkAppInstance.votingID.get();
 
   // private_key[1] used - not yet voted with this
-  const nullifierHash = Poseidon.hash(
-    privateKeys[1].toFields().concat([votingID])
+  // const nullifierHash = Poseidon.hash(
+  //   privateKeys[1].toFields().concat([votingID])
+  // );
+  // const nullifierWitness =
+  //   offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
+
+  let privilegedKey = privateKeys[1];
+
+  let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+
+  const nullifier = Nullifier.fromJSON(jsonNullifier);
+  const nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+    offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
   );
-  const nullifierWitness =
-    offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
 
   const option = 0n;
   const voteCountsWitness = new VoteCountMerkleWitness(
@@ -176,7 +224,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
   try {
     const txn = await Mina.transaction(deployerAccount, () => {
       zkAppInstance.vote(
-        privateKeys[1],
+        Nullifier.fromJSON(jsonNullifier),
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
@@ -189,7 +237,8 @@ displayTree(offChainInstance.voteCountMerkleTree);
     // update the off chain state only if the txn succeeds
     if (txnResult.isSuccess) {
       // update off chain state
-      offChainInstance.updateOffChainState(nullifierHash, option);
+      nullifier.setUsed(nullifierWitness);
+      offChainInstance.updateOffChainState(nullifier, option);
     }
   } catch (err: any) {
     console.error('Error:', err.message);
@@ -210,11 +259,14 @@ displayTree(offChainInstance.voteCountMerkleTree);
   );
   const votingID = zkAppInstance.votingID.get();
 
-  const nullifierHash = Poseidon.hash(
-    privateKeys[1].toFields().concat([votingID])
+  let privilegedKey = privateKeys[1];
+
+  let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+
+  const nullifier = Nullifier.fromJSON(jsonNullifier);
+  const nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+    offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
   );
-  const nullifierWitness =
-    offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
 
   const option = 1n;
   const voteCountsWitness = new VoteCountMerkleWitness(
@@ -225,7 +277,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
   try {
     const txn = await Mina.transaction(deployerAccount, () => {
       zkAppInstance.vote(
-        privateKeys[1],
+        nullifier,
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
@@ -238,7 +290,8 @@ displayTree(offChainInstance.voteCountMerkleTree);
     // update the off chain state only if the txn succeeds
     if (txnResult.isSuccess) {
       // update off chain state
-      offChainInstance.updateOffChainState(nullifierHash, option);
+      nullifier.setUsed(nullifierWitness);
+      offChainInstance.updateOffChainState(nullifier, option);
     }
   } catch (err: any) {
     console.error('Error:', err.message);
@@ -249,8 +302,8 @@ console.log('\nvoteCountMerkleTree After Second Vote of User 2: ');
 displayTree(offChainInstance.voteCountMerkleTree);
 
 {
-  // USER 3 TRIES TO VOTE WITH WRONG PRIVATE KEY (Voting Fails)
-  console.log('\n User 3 tries to vote with wrong private key. It must fail');
+  // USER 3 TRIES TO VOTE (Succesfull Voting)
+  // console.log('\n User 3 tries to vote with wrong private key. It must fail');
   // create witness for index 1
   const votersWitness = new VoterListMerkleWitness(
     offChainInstance.votersMerkleTree.getWitness(2n)
@@ -258,11 +311,14 @@ displayTree(offChainInstance.voteCountMerkleTree);
   const votingID = zkAppInstance.votingID.get();
 
   // private_key[1] used - not yet voted with this
-  const nullifierHash = Poseidon.hash(
-    privateKeys[3].toFields().concat([votingID])
+  let privilegedKey = privateKeys[2];
+
+  let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+
+  const nullifier = Nullifier.fromJSON(jsonNullifier);
+  const nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+    offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
   );
-  const nullifierWitness =
-    offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
 
   const option = 0n;
   const voteCountsWitness = new VoteCountMerkleWitness(
@@ -273,7 +329,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
   try {
     const txn = await Mina.transaction(deployerAccount, () => {
       zkAppInstance.vote(
-        privateKeys[2], // wrong private_key; correct would be privateKeys[1]
+        nullifier,
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
@@ -286,7 +342,8 @@ displayTree(offChainInstance.voteCountMerkleTree);
     // update the off chain state only if the txn succeeds
     if (txnResult.isSuccess) {
       // update off chain state
-      offChainInstance.updateOffChainState(nullifierHash, option);
+      nullifier.setUsed(nullifierWitness);
+      offChainInstance.updateOffChainState(nullifier, option);
     }
   } catch (err: any) {
     console.error('Error:', err.message);
@@ -307,11 +364,14 @@ displayTree(offChainInstance.voteCountMerkleTree);
   const votingID = zkAppInstance.votingID.get();
 
   // private_key[1] used - not yet voted with this
-  const nullifierHash = Poseidon.hash(
-    privateKeys[3].toFields().concat([votingID])
+  let privilegedKey = privateKeys[3];
+
+  let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+
+  const nullifier = Nullifier.fromJSON(jsonNullifier);
+  const nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+    offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
   );
-  const nullifierWitness =
-    offChainInstance.nullifierMerkleMap.getWitness(nullifierHash);
 
   // vote for option 1
   const option = 1n;
@@ -323,7 +383,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
   try {
     const txn = await Mina.transaction(deployerAccount, () => {
       zkAppInstance.vote(
-        privateKeys[3],
+        nullifier,
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
@@ -337,7 +397,8 @@ displayTree(offChainInstance.voteCountMerkleTree);
     // update the off chain state only if the txn succeeds
     if (txnResult.isSuccess) {
       // update off chain state
-      offChainInstance.updateOffChainState(nullifierHash, option);
+      nullifier.setUsed(nullifierWitness);
+      offChainInstance.updateOffChainState(nullifier, option);
     }
   } catch (err: any) {
     console.error('Error:', err.message);
@@ -375,7 +436,7 @@ displayTree(offChainInstance.voteCountMerkleTree);
       console.log('The merkle tree of the vote count is:');
       displayTree(offChainInstance.voteCountMerkleTree);
       console.log('\nVoting Results:');
-      console.log('Option 1: 2 \nOption 2: 1');
+      console.log('Option 1: 3 \nOption 2: 1');
     }
   } catch (err: any) {
     console.error('Error:', err.message);
