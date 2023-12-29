@@ -150,7 +150,10 @@ export default function Content() {
         //     await import("@/contracts/keys/berkeley.json")
         //   ).publicKey;*/
 
-        const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
+        // const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
+        const zkappPublicKey = PublicKey.fromBase58(
+          'B62qpGfrPQKvqpU1jUZwxmbqcmWY1FYgYkgpMNpRHDv8g4E94hdXswg'
+        );
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 
         console.log('Getting zkApp state...');
@@ -168,7 +171,7 @@ export default function Content() {
 
         await zkappWorkerClient.setOffchainInstance();
 
-        if (!isInitialized) {
+        if (!Boolean(isInitialized)) {
           await zkappWorkerClient.initState();
 
           console.log('Creating proof...');
