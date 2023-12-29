@@ -8,6 +8,14 @@
       "feepayerAlias": "03-deploy",
       "fee": "0.2",
       "smartContract": "Votes"
+    },
+    "berkeley2": {
+      "url": "https://proxy.berkeley.minaexplorer.com/graphql",
+      "keyPath": "keys/berkeley2.json",
+      "feepayerKeyPath": "C:\\Users\\kocak/.cache/zkapp-cli/keys/deployer2.json",
+      "feepayerAlias": "deployer2",
+      "fee": "0.4",
+      "smartContract": "Votes"
     }
   }
 }
