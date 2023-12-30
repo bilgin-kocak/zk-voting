@@ -105,8 +105,8 @@ export default function Content() {
           connecting: true,
         }));
         const { Mina, PublicKey, UInt32 } = await import('o1js');
-        const { Votes } = await import('@/contracts/build/src/');
-        const ZkappWorkerClient = (await import('@/app/zkappWorkerClient'))
+        const { Votes } = await import('../../contracts/build/src/');
+        const ZkappWorkerClient = (await import('../../app/zkappWorkerClient'))
           .default;
         const Berkeley = Mina.Network(
           'https://proxy.berkeley.minaexplorer.com/graphql'
