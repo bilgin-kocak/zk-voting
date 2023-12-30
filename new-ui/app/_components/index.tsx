@@ -166,12 +166,18 @@ export default function Content() {
 
         console.log('Initializing zkApp...');
 
-        const isInitialized = await zkappWorkerClient.getIsInitialized();
+        let isInitialized = await zkappWorkerClient.getIsInitialized();
         console.log('isInitialized', isInitialized);
+
+        if (isInitialized === 'true') {
+          isInitialized = true;
+        } else {
+          isInitialized = false;
+        }
 
         await zkappWorkerClient.setOffchainInstance();
 
-        if (!Boolean(isInitialized)) {
+        if (!isInitialized) {
           await zkappWorkerClient.initState();
 
           console.log('Creating proof...');

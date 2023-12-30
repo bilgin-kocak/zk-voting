@@ -119,28 +119,29 @@ const functions = {
 
     // TODO: change contract to accept public key instead of private key
 
+    // Those will change
     // Create Witness
-    const option = BigInt(args.voteOption);
-    const votersWitness = votersMerkleTree.getWitness(option);
-    const votingID: Field = await state.zkapp!.votingID.get();
-    const nullifierHash = Poseidon.hash(
-      args.privateKey.toFields().concat([votingID])
-    );
-    const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
+    // const option = BigInt(args.voteOption);
+    // const votersWitness = votersMerkleTree.getWitness(option);
+    // const votingID: Field = await state.zkapp!.votingID.get();
+    // const nullifierHash = Poseidon.hash(
+    //   args.privateKey.toFields().concat([votingID])
+    // );
+    // const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
 
-    const voteCountsWitness = voteCountMerkleTree.getWitness(option);
-    const currentVotes = voteCountMerkleTree.getNode(0, option);
+    // const voteCountsWitness = voteCountMerkleTree.getWitness(option);
+    // const currentVotes = voteCountMerkleTree.getNode(0, option);
 
-    const transaction = await Mina.transaction(() => {
-      state.zkapp!.vote(
-        args.privateKey,
-        votersWitness,
-        nullifierWitness,
-        voteCountsWitness,
-        currentVotes
-      );
-    });
-    state.transaction = transaction;
+    // const transaction = await Mina.transaction(() => {
+    //   state.zkapp!.vote(
+    //     args.privateKey,
+    //     votersWitness,
+    //     nullifierWitness,
+    //     voteCountsWitness,
+    //     currentVotes
+    //   );
+    // });
+    // state.transaction = transaction;
   },
 
   // getBallot: async (args: {}) => {
