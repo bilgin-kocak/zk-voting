@@ -14,7 +14,7 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import type { Votes } from '../contracts/src/Votes';
+import type { Votes } from '@/contracts/src/Votes';
 
 const state = {
   Votes: null as null | typeof Votes,
