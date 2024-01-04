@@ -9,6 +9,7 @@ import {
   MerkleMap,
   PrivateKey,
 } from 'o1js';
+import { uploadBuffer } from './helpers';
 
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
@@ -94,6 +95,8 @@ const functions = {
       publicKeyHashes
     );
     console.log('OffChain Instance Created');
+    const buffer = Buffer.from(JSON.stringify(offChainInstance));
+    const res = await uploadBuffer(buffer);
     state.offChainInstance = offChainInstance;
   },
 
