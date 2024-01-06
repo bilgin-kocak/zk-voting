@@ -10,7 +10,7 @@ import {
   PrivateKey,
 } from 'o1js';
 import { uploadBuffer } from './helpers';
-
+import axios from 'axios';
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
@@ -96,7 +96,22 @@ const functions = {
     );
     console.log('OffChain Instance Created');
     const buffer = Buffer.from(JSON.stringify(offChainInstance));
-    const res = await uploadBuffer(buffer);
+    // const res = await uploadBuffer(buffer);
+    const body = JSON.stringify({
+      key1: 'value1',
+      key2: 'value2',
+    });
+    try {
+      const response = await axios.post('/api/ipfs', body, {
+        headers: {
+          'Content-Type': 'application/octet-stream', // or appropriate content type
+        },
+      });
+      // const result = await response.json();
+      console.log(response);
+    } catch (error) {
+      console.error('Error:', error);
+    }
     state.offChainInstance = offChainInstance;
   },
 
