@@ -39,18 +39,55 @@ class OffChainStorage {
   readonly votersMerkleTree: MerkleTree;
   voteCountMerkleTree: MerkleTree;
   nullifierMerkleMap: MerkleMap;
+  voters: Field[];
+  voterCounts: number[];
+  nullifiers: Field[];
 
   constructor(num_voters: number, options: number, voters: Field[]) {
     this.votersMerkleTree = new MerkleTree(num_voters + 1);
     this.voteCountMerkleTree = new MerkleTree(options + 1);
     this.nullifierMerkleMap = new MerkleMap();
     this.votersMerkleTree.fill(voters);
+    this.voters = voters;
+    this.voterCounts = new Array(options).fill(0);
+    this.nullifiers = [];
   }
 
   updateOffChainState(nullifierHash: Field, voteOption: bigint) {
     this.nullifierMerkleMap.set(nullifierHash, Field(1));
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
-    this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
+    console.log('Current Vote:', currentVote);
+    // this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
+    this.nullifiers.push(nullifierHash);
+    // Add increase vote options in voterCounts
+    const index = Number(voteOption);
+    this.voterCounts[index] += 1;
+  }
+
+  saveOffChainState() {
+    const voters = this.voters;
+    const voterCounts = this.voterCounts;
+    const nullifiers = this.nullifiers;
+    const ojb = {
+      voters: voters.map((v) => v.toString()),
+      voterCounts,
+      nullifiers: nullifiers.map((n) => n.toString()),
+    };
+    return ojb;
+  }
+
+  loadOffChainState(obj: any) {
+    const voters = obj.voters.map((v: string) => Field(v));
+    const voterCounts = obj.voterCounts;
+    const nullifiers = obj.nullifiers.map((n: string) => Field(n));
+    this.voters = voters;
+    this.voterCounts = voterCounts;
+    this.nullifiers = nullifiers;
+    this.votersMerkleTree.fill(voters);
+    this.voteCountMerkleTree.fill(voterCounts.map((v: number) => BigInt(v)));
+    for (let i = 0; i < nullifiers.length; i++) {
+      this.nullifierMerkleMap.set(nullifiers[i], Field(1));
+    }
   }
 }
 
@@ -95,23 +132,23 @@ const functions = {
       publicKeyHashes
     );
     console.log('OffChain Instance Created');
-    const buffer = Buffer.from(JSON.stringify(offChainInstance));
-    // const res = await uploadBuffer(buffer);
-    const body = JSON.stringify({
-      key1: 'value1',
-      key2: 'value2',
-    });
+
+    // Get Offchain State from Remote Server
+    const url = 'http://localhost:3001/offchain';
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Make the PUT request
+
     try {
-      const response = await axios.post('/api/ipfs', body, {
-        headers: {
-          'Content-Type': 'application/octet-stream', // or appropriate content type
-        },
-      });
-      // const result = await response.json();
-      console.log(response);
+      const response = await axios.get(url, { headers: headers });
+      console.log('Response:', response.data);
+      offChainInstance.loadOffChainState(response.data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error(error);
     }
+
     state.offChainInstance = offChainInstance;
   },
 
@@ -134,6 +171,37 @@ const functions = {
     const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
     const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
     const nullifierMerkleMap = state.offChainInstance!.nullifierMerkleMap;
+
+    const offChainInstance = state.offChainInstance!;
+    const option = BigInt(args.voteOption);
+
+    const nullifierHash = Poseidon.hash([Field.random()]);
+
+    offChainInstance.updateOffChainState(nullifierHash, option);
+
+    // Save the offChainInstance to file
+    const obj = offChainInstance.saveOffChainState();
+    // Save stringified to file
+    const data = JSON.stringify(obj);
+    console.log('New OffChain State:', data);
+
+    // Define the URL and headers
+    const url = 'http://localhost:3001/offchain';
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Make the PUT request
+
+    try {
+      const response = await axios.put(url, data, { headers: headers });
+      console.log('Response:', response.data);
+    } catch (error) {
+      console.error(error);
+    }
+
+    // Save new states to cache
+    state.offChainInstance = offChainInstance;
 
     // TODO: change contract to accept public key instead of private key
 
