@@ -71,6 +71,8 @@ export default function Content() {
         voteOption: 0,
       });
 
+      console.log('New Offchain State Uploaded');
+
       console.log('Creating proof...');
       await state.zkappWorkerClient!.proveTransaction();
 

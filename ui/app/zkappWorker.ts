@@ -133,8 +133,10 @@ const functions = {
     );
     console.log('OffChain Instance Created');
 
+    const cid = 'QmcE4pX4gtcdqEx6trwNUKPRs2pvaPG2LSxnp1PEp6cC6G';
+
     // Get Offchain State from Remote Server
-    const url = 'http://localhost:3001/offchain';
+    const url = `http://localhost:3001/offchain/{cid}`;
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -181,6 +183,7 @@ const functions = {
 
     // Save the offChainInstance to file
     const obj = offChainInstance.saveOffChainState();
+
     // Save stringified to file
     const data = JSON.stringify(obj);
     console.log('New OffChain State:', data);
@@ -194,7 +197,7 @@ const functions = {
     // Make the PUT request
 
     try {
-      const response = await axios.put(url, data, { headers: headers });
+      const response = await axios.post(url, obj, { headers: headers });
       console.log('Response:', response.data);
     } catch (error) {
       console.error(error);
