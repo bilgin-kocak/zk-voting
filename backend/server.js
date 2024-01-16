@@ -3,7 +3,7 @@ const axios = require('axios');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { uploadBuffer, uploadText } = require('./utils');
+const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 
 const app = express();
 const port = 3001; // You can choose any available port
@@ -15,9 +15,10 @@ app.use(bodyParser.json());
 
 app.get('/offchain/:cid', async (req, res) => {
   try {
-    const url = `https://gateway.lighthouse.storage/ipfs/${req.params.cid}`;
+    // const url = `https://gateway.lighthouse.storage/ipfs/${req.params.cid}`;
+    const url = `https://moccasin-weary-cat-358.mypinata.cloud/ipfs/${req.params.cid}`;
 
-    // Forward the PUT request
+    // Forward the GET request
     const response = await axios.get(url);
 
     // Send back the response from the target server
@@ -49,14 +50,16 @@ app.post('/offchain', async (req, res) => {
     // // Convert the object to a JSON string
     // const data = JSON.stringify(obj);
 
+    const result = await pinataUploadJson(data);
+
     const dataString = JSON.stringify(data);
     // Convert the JSON string to a Buffer
     const dataBuffer = Buffer.from(dataString);
 
-    const result = await uploadBuffer(dataBuffer);
+    // const result = await uploadBuffer(dataBuffer);
     console.log(result);
     // Send back the response from the target server
-    res.status(2001).send('success');
+    res.status(201).send('success');
   } catch (error) {
     console.error('Error forwarding POST request:', error);
     res.status(500).send('Error forwarding request');
