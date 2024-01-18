@@ -8,6 +8,9 @@ import {
   MerkleTree,
   MerkleMap,
   PrivateKey,
+  Nullifier,
+  Provable,
+  MerkleMapWitness,
 } from 'o1js';
 import { uploadBuffer } from './helpers';
 import axios from 'axios';
@@ -39,11 +42,17 @@ class OffChainStorage {
   readonly votersMerkleTree: MerkleTree;
   voteCountMerkleTree: MerkleTree;
   nullifierMerkleMap: MerkleMap;
+  nullifier: Nullifier;
   voters: Field[];
   voterCounts: number[];
   nullifiers: Field[];
 
-  constructor(num_voters: number, options: number, voters: Field[]) {
+  constructor(
+    num_voters: number,
+    options: number,
+    voters: Field[],
+    nullifier: Nullifier
+  ) {
     this.votersMerkleTree = new MerkleTree(num_voters + 1);
     this.voteCountMerkleTree = new MerkleTree(options + 1);
     this.nullifierMerkleMap = new MerkleMap();
@@ -51,14 +60,16 @@ class OffChainStorage {
     this.voters = voters;
     this.voterCounts = new Array(options).fill(0);
     this.nullifiers = [];
+    this.nullifier = nullifier;
   }
 
-  updateOffChainState(nullifierHash: Field, voteOption: bigint) {
-    this.nullifierMerkleMap.set(nullifierHash, Field(1));
+  updateOffChainState(nullifier: Nullifier, voteOption: bigint) {
+    // this.nullifierMerkleMap.set(nullifierHash, Field(1));
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
     console.log('Current Vote:', currentVote);
     // this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
-    this.nullifiers.push(nullifierHash);
+    this.nullifierMerkleMap.set(nullifier.key(), Field(1));
+    this.nullifiers.push(nullifier.key());
     // Add increase vote options in voterCounts
     const index = Number(voteOption);
     this.voterCounts[index] += 1;
@@ -126,10 +137,16 @@ const functions = {
     const publicKeyHashes: Field[] = votableAdresses.map((key) =>
       Poseidon.hash(PublicKey.fromBase58(key).toFields())
     );
+
+    // We need mina signer to sign the nullifier
+
+    const nullifier = Nullifier.random();
+
     let offChainInstance = new OffChainStorage(
       num_voters,
       options,
-      publicKeyHashes
+      publicKeyHashes,
+      nullifier
     );
     console.log('OffChain Instance Created');
 
@@ -179,7 +196,7 @@ const functions = {
 
     const nullifierHash = Poseidon.hash([Field.random()]);
 
-    offChainInstance.updateOffChainState(nullifierHash, option);
+    offChainInstance.updateOffChainState(state.offChainInstance!.nullifier, option);
 
     // Save the offChainInstance to file
     const obj = offChainInstance.saveOffChainState();
@@ -211,8 +228,16 @@ const functions = {
     // Those will change
     // Create Witness
     // const option = BigInt(args.voteOption);
-    // const votersWitness = votersMerkleTree.getWitness(option);
-    // const votingID: Field = await state.zkapp!.votingID.get();
+    const votersWitness = votersMerkleTree.getWitness(option);
+    // const votingID = state.zkapp!.votingID.get();
+    const votingID: Field = await state.zkapp!.votingID.get();
+    console.log('Voting ID:', votingID);
+
+    cosnt nullifier = offChainInstance.nullifier;
+
+    let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+      offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
+    );
     // const nullifierHash = Poseidon.hash(
     //   args.privateKey.toFields().concat([votingID])
     // );
