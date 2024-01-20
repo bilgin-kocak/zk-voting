@@ -11,6 +11,7 @@ import {
   Nullifier,
   Provable,
   MerkleMapWitness,
+  MerkleWitness,
 } from 'o1js';
 import { uploadBuffer } from './helpers';
 import axios from 'axios';
@@ -29,6 +30,9 @@ const state = {
 
 const num_voters = 2; // Total Number of Voters
 const options = 2; // TOtal Number of Options
+
+class VoterListMerkleWitness extends MerkleWitness(num_voters + 1) {}
+class VoteCountMerkleWitness extends MerkleWitness(options + 1) {}
 
 // You can write different public keys to each voter
 const votableAdresses = [
@@ -140,7 +144,10 @@ const functions = {
 
     // We need mina signer to sign the nullifier
 
-    const nullifier = Nullifier.random();
+    const privilegedKey = PrivateKey.random();
+    let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+    // const nullifier = Nullifier.random();
+    const nullifier = Nullifier.fromJSON(jsonNullifier);
 
     let offChainInstance = new OffChainStorage(
       num_voters,
@@ -196,7 +203,10 @@ const functions = {
 
     const nullifierHash = Poseidon.hash([Field.random()]);
 
-    offChainInstance.updateOffChainState(state.offChainInstance!.nullifier, option);
+    offChainInstance.updateOffChainState(
+      state.offChainInstance!.nullifier,
+      option
+    );
 
     // Save the offChainInstance to file
     const obj = offChainInstance.saveOffChainState();
@@ -225,15 +235,23 @@ const functions = {
 
     // TODO: change contract to accept public key instead of private key
 
-    // Those will change
     // Create Witness
-    // const option = BigInt(args.voteOption);
-    const votersWitness = votersMerkleTree.getWitness(option);
-    // const votingID = state.zkapp!.votingID.get();
-    const votingID: Field = await state.zkapp!.votingID.get();
+    const votersWitness = new VoterListMerkleWitness(
+      offChainInstance.votersMerkleTree.getWitness(option)
+    );
+
+    const voteCountsWitness = new VoteCountMerkleWitness(
+      offChainInstance.voteCountMerkleTree.getWitness(option)
+    );
+
+    // This must changed
+    const privilegedKey = PrivateKey.random();
+
+    let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+    const votingID = await state.zkapp!.votingID.get();
     console.log('Voting ID:', votingID);
 
-    cosnt nullifier = offChainInstance.nullifier;
+    const nullifier = offChainInstance.nullifier;
 
     let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
       offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
@@ -244,18 +262,18 @@ const functions = {
     // const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
 
     // const voteCountsWitness = voteCountMerkleTree.getWitness(option);
-    // const currentVotes = voteCountMerkleTree.getNode(0, option);
+    const currentVotes = voteCountMerkleTree.getNode(0, option);
 
-    // const transaction = await Mina.transaction(() => {
-    //   state.zkapp!.vote(
-    //     args.privateKey,
-    //     votersWitness,
-    //     nullifierWitness,
-    //     voteCountsWitness,
-    //     currentVotes
-    //   );
-    // });
-    // state.transaction = transaction;
+    const transaction = await Mina.transaction(() => {
+      state.zkapp!.vote(
+        Nullifier.fromJSON(jsonNullifier),
+        votersWitness,
+        nullifierWitness,
+        voteCountsWitness,
+        currentVotes
+      );
+    });
+    state.transaction = transaction;
   },
 
   // getBallot: async (args: {}) => {
