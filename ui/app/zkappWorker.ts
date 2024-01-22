@@ -160,7 +160,7 @@ const functions = {
     const cid = 'QmcE4pX4gtcdqEx6trwNUKPRs2pvaPG2LSxnp1PEp6cC6G';
 
     // Get Offchain State from Remote Server
-    const url = `http://localhost:3001/offchain/${cid}`;
+    const url = `${process.env.NEXT_BACKEND_URL}/offchain/${cid}`;
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -216,7 +216,7 @@ const functions = {
     console.log('New OffChain State:', data);
 
     // Define the URL and headers
-    const url = 'http://localhost:3001/offchain';
+    const url = `${process.env.NEXT_BACKEND_URL}/offchain`;
     const headers = {
       'Content-Type': 'application/json',
     };
