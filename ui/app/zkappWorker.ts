@@ -160,7 +160,7 @@ const functions = {
     const cid = 'QmcE4pX4gtcdqEx6trwNUKPRs2pvaPG2LSxnp1PEp6cC6G';
 
     // Get Offchain State from Remote Server
-    const url = `http://localhost:3001/offchain/{cid}`;
+    const url = `http://localhost:3001/offchain/${cid}`;
     const headers = {
       'Content-Type': 'application/json',
     };
