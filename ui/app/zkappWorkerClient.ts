@@ -1,4 +1,4 @@
-import { fetchAccount, PublicKey, Field, PrivateKey } from 'o1js';
+import { fetchAccount, PublicKey, Field, PrivateKey, Nullifier } from 'o1js';
 
 import type {
   ZkappWorkerRequest,
@@ -42,8 +42,8 @@ export default class ZkappWorkerClient {
     return this._call('getIsInitialized', {});
   }
 
-  setOffchainInstance() {
-    return this._call('setOffChainInstance', {});
+  setOffchainInstance(nullifier: Nullifier) {
+    return this._call('setOffChainInstance', { nullifier: nullifier });
   }
 
   initState() {
@@ -54,9 +54,16 @@ export default class ZkappWorkerClient {
     return this._call('getVotingID', {});
   }
 
-  castVote({ voteOption }: { voteOption: number }): Promise<any> {
+  castVote({
+    voteOption,
+    nullifier,
+  }: {
+    voteOption: number;
+    nullifier: Nullifier;
+  }): Promise<any> {
     return this._call('castVote', {
       voteOption,
+      nullifier,
     });
   }
 

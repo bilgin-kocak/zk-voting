@@ -7,6 +7,7 @@ import { Button } from '@/components/button/Button';
 import { Alert } from '@/components/alert/Alert';
 import Candidates from './candidates/candidates';
 import { useLocalStorage } from '@/hooks';
+import { Nullifier, PrivateKey } from 'o1js';
 
 let transactionFee = 0.1;
 
@@ -67,8 +68,11 @@ export default function Content() {
         publicKey: state.publicKey!,
       });
 
+      const nullifier = await createNullifier();
+
       await state.zkappWorkerClient!.castVote({
         voteOption: 0,
+        nullifier: nullifier!,
       });
 
       console.log('New Offchain State Uploaded');
@@ -177,7 +181,9 @@ export default function Content() {
           isInitialized = false;
         }
 
-        await zkappWorkerClient.setOffchainInstance();
+        const nullifier = await createNullifier();
+
+        await zkappWorkerClient.setOffchainInstance(nullifier);
 
         if (!isInitialized) {
           await zkappWorkerClient.initState();
@@ -224,6 +230,16 @@ export default function Content() {
       ...prev,
       connecting: false,
     }));
+  };
+
+  const createNullifier = async () => {
+    const nullifierJson = await (window as any).mina?.createNullifier({
+      message: [], // or ["1", "2", "3"]
+    });
+    console.log('nullifierJson', nullifierJson);
+    console.log('typeof nullifierJson', typeof nullifierJson);
+
+    return nullifierJson;
   };
 
   return (

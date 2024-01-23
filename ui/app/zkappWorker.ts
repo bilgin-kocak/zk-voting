@@ -13,6 +13,7 @@ import {
   MerkleMapWitness,
   MerkleWitness,
 } from 'o1js';
+import Client from 'mina-signer';
 import { uploadBuffer } from './helpers';
 import axios from 'axios';
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
@@ -106,6 +107,8 @@ class OffChainStorage {
   }
 }
 
+const client = new Client({ network: 'testnet' });
+
 // ---------------------------------------------------------------------------------------
 
 const functions = {
@@ -137,17 +140,29 @@ const functions = {
     return JSON.stringify(isInitialized);
   },
 
-  setOffChainInstance: async (args: {}) => {
+  setOffChainInstance: async (args: { nullifier: Nullifier }) => {
     const publicKeyHashes: Field[] = votableAdresses.map((key) =>
       Poseidon.hash(PublicKey.fromBase58(key).toFields())
     );
+    const jsonNullifier = {
+      private: args.nullifier.private,
+      public: args.nullifier.public,
+      publicKey: args.nullifier.publicKey,
+    };
+    const nullifier = Nullifier.fromJSON(jsonNullifier);
+    // const nullifier = args.nullifier;
 
     // We need mina signer to sign the nullifier
 
     const privilegedKey = PrivateKey.random();
-    let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+    // let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+    const jsonNullifier1 = client.createNullifier([], privilegedKey.toBase58());
+    console.log('JSON Nullifier:', jsonNullifier);
+    // const nullifier = await (window as any).mina?.createNullifier({
+    //   message: [], // or ["1", "2", "3"]
+    // });
     // const nullifier = Nullifier.random();
-    const nullifier = Nullifier.fromJSON(jsonNullifier);
+    // const nullifier = Nullifier.fromJSON(jsonNullifier);
 
     let offChainInstance = new OffChainStorage(
       num_voters,
@@ -193,7 +208,14 @@ const functions = {
     return JSON.stringify(votingID);
   },
 
-  castVote: async (args: { voteOption: number }) => {
+  castVote: async (args: { voteOption: number; nullifier: Nullifier }) => {
+    const jsonNullifier = {
+      private: args.nullifier.private,
+      public: args.nullifier.public,
+      publicKey: args.nullifier.publicKey,
+    };
+    const nullifier = Nullifier.fromJSON(jsonNullifier);
+
     const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
     const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
     const nullifierMerkleMap = state.offChainInstance!.nullifierMerkleMap;
@@ -247,11 +269,11 @@ const functions = {
     // This must changed
     const privilegedKey = PrivateKey.random();
 
-    let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
+    // let jsonNullifier = client.createNullifier([], privilegedKey.toBase58());
     const votingID = await state.zkapp!.votingID.get();
     console.log('Voting ID:', votingID);
 
-    const nullifier = offChainInstance.nullifier;
+    // const nullifier = offChainInstance.nullifier;
 
     let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
       offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
@@ -266,7 +288,7 @@ const functions = {
 
     const transaction = await Mina.transaction(() => {
       state.zkapp!.vote(
-        Nullifier.fromJSON(jsonNullifier),
+        nullifier,
         votersWitness,
         nullifierWitness,
         voteCountsWitness,
