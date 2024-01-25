@@ -147,7 +147,6 @@ const functions = {
 
     // Type Conversion
     const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
-    // const nullifier = args.nullifier;
 
     // We need mina signer to sign the nullifier
     console.log('Nullifier:', args.nullifier);
@@ -168,8 +167,7 @@ const functions = {
       'Content-Type': 'application/json',
     };
 
-    // Make the PUT request
-
+    // Make the GET request
     try {
       const response = await axios.get(url, { headers: headers });
       console.log('Response:', response.data);
@@ -206,8 +204,6 @@ const functions = {
     const offChainInstance = state.offChainInstance!;
     const option = BigInt(args.voteOption);
 
-    const nullifierHash = Poseidon.hash([Field.random()]);
-
     offChainInstance.updateOffChainState(
       state.offChainInstance!.nullifier,
       option
@@ -226,8 +222,7 @@ const functions = {
       'Content-Type': 'application/json',
     };
 
-    // Make the PUT request
-
+    // Make the POST request
     try {
       const response = await axios.post(url, obj, { headers: headers });
       console.log('Response:', response.data);
@@ -238,8 +233,6 @@ const functions = {
     // Save new states to cache
     state.offChainInstance = offChainInstance;
 
-    // TODO: change contract to accept public key instead of private key
-
     // Create Witness
     const votersWitness = new VoterListMerkleWitness(
       offChainInstance.votersMerkleTree.getWitness(option)
@@ -249,24 +242,13 @@ const functions = {
       offChainInstance.voteCountMerkleTree.getWitness(option)
     );
 
-    // This must changed
-    const privilegedKey = PrivateKey.random();
-
-    // let jsonNullifier = client.createNullifier([], privilegedKey.toBase58());
     const votingID = await state.zkapp!.votingID.get();
     console.log('Voting ID:', votingID);
-
-    // const nullifier = offChainInstance.nullifier;
 
     let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
       offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
     );
-    // const nullifierHash = Poseidon.hash(
-    //   args.privateKey.toFields().concat([votingID])
-    // );
-    // const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
 
-    // const voteCountsWitness = voteCountMerkleTree.getWitness(option);
     const currentVotes = voteCountMerkleTree.getNode(0, option);
 
     const transaction = await Mina.transaction(() => {
