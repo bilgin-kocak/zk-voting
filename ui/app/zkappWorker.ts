@@ -144,25 +144,13 @@ const functions = {
     const publicKeyHashes: Field[] = votableAdresses.map((key) =>
       Poseidon.hash(PublicKey.fromBase58(key).toFields())
     );
-    const jsonNullifier = {
-      private: args.nullifier.private,
-      public: args.nullifier.public,
-      publicKey: args.nullifier.publicKey,
-    };
-    const nullifier = Nullifier.fromJSON(jsonNullifier);
+
+    // Type Conversion
+    const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
     // const nullifier = args.nullifier;
 
     // We need mina signer to sign the nullifier
-
-    const privilegedKey = PrivateKey.random();
-    // let jsonNullifier = Nullifier.createTestNullifier([], privilegedKey);
-    const jsonNullifier1 = client.createNullifier([], privilegedKey.toBase58());
-    console.log('JSON Nullifier:', jsonNullifier);
-    // const nullifier = await (window as any).mina?.createNullifier({
-    //   message: [], // or ["1", "2", "3"]
-    // });
-    // const nullifier = Nullifier.random();
-    // const nullifier = Nullifier.fromJSON(jsonNullifier);
+    console.log('Nullifier:', args.nullifier);
 
     let offChainInstance = new OffChainStorage(
       num_voters,
@@ -209,12 +197,7 @@ const functions = {
   },
 
   castVote: async (args: { voteOption: number; nullifier: Nullifier }) => {
-    const jsonNullifier = {
-      private: args.nullifier.private,
-      public: args.nullifier.public,
-      publicKey: args.nullifier.publicKey,
-    };
-    const nullifier = Nullifier.fromJSON(jsonNullifier);
+    const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
 
     const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
     const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
@@ -344,6 +327,34 @@ if (typeof window !== 'undefined') {
       postMessage(message);
     }
   );
+}
+
+function NullifierToJson(nullifier: Nullifier) {
+  const jsonNullifier = {
+    private: {
+      c: nullifier.private.c.toString(),
+      g_r: {
+        x: nullifier.private.g_r.x.toString(),
+        y: nullifier.private.g_r.y.toString(),
+      },
+      h_m_pk_r: {
+        x: nullifier.private.h_m_pk_r.x.toString(),
+        y: nullifier.private.h_m_pk_r.y.toString(),
+      },
+    },
+    public: {
+      nullifier: {
+        x: nullifier.public.nullifier.x.toString(),
+        y: nullifier.public.nullifier.y.toString(),
+      },
+      s: nullifier.public.s.toString(),
+    },
+    publicKey: {
+      x: nullifier.publicKey.x.toString(),
+      y: nullifier.publicKey.y.toString(),
+    },
+  };
+  return jsonNullifier;
 }
 
 console.log('Web Worker Successfully Initialized.');
