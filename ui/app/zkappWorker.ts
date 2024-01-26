@@ -13,7 +13,6 @@ import {
   MerkleMapWitness,
   MerkleWitness,
 } from 'o1js';
-import Client from 'mina-signer';
 import { uploadBuffer } from './helpers';
 import axios from 'axios';
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
@@ -107,8 +106,6 @@ class OffChainStorage {
   }
 }
 
-const client = new Client({ network: 'testnet' });
-
 // ---------------------------------------------------------------------------------------
 
 const functions = {
@@ -197,9 +194,7 @@ const functions = {
   castVote: async (args: { voteOption: number; nullifier: Nullifier }) => {
     const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
 
-    const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
     const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
-    const nullifierMerkleMap = state.offChainInstance!.nullifierMerkleMap;
 
     const offChainInstance = state.offChainInstance!;
     const option = BigInt(args.voteOption);
@@ -263,10 +258,6 @@ const functions = {
     state.transaction = transaction;
   },
 
-  // getBallot: async (args: {}) => {
-  //   const currentBallot = await state.zkapp!.ballot.get();
-  //   return JSON.stringify(currentBallot);
-  // },
   // cast: async (args: { candidate: number }) => {
   //   const transaction = await Mina.transaction(() => {
   //     state.zkapp!.cast(UInt32.from(args.candidate));
