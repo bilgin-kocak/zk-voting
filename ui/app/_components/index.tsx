@@ -71,7 +71,7 @@ export default function Content() {
       const nullifier = await createNullifier();
 
       await state.zkappWorkerClient!.castVote({
-        voteOption: 0,
+        voteOption: candidate,
         nullifier: nullifier!,
       });
 
@@ -99,6 +99,7 @@ export default function Content() {
       setState((prev) => ({ ...prev, voted: true }));
     } catch (error) {
       console.error(error);
+      setAlert({ message: 'An error occurred', error: true });
     }
     setState((prev) => ({ ...prev, voting: false }));
   };
