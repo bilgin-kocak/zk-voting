@@ -9,6 +9,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines" : { 
+    "npm" : ">=10.0.0",
+    "node" : ">=18.0.0"
+  },
   "dependencies": {
     "@lighthouse-web3/sdk": "^0.3.0",
     "@pinata/sdk": "^2.1.0",
