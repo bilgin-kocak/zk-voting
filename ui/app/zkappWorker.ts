@@ -8,8 +8,13 @@ import {
   MerkleTree,
   MerkleMap,
   PrivateKey,
+  Nullifier,
+  Provable,
+  MerkleMapWitness,
+  MerkleWitness,
 } from 'o1js';
-
+import { uploadBuffer } from './helpers';
+import axios from 'axios';
 type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
@@ -26,6 +31,9 @@ const state = {
 const num_voters = 2; // Total Number of Voters
 const options = 2; // TOtal Number of Options
 
+class VoterListMerkleWitness extends MerkleWitness(num_voters + 1) {}
+class VoteCountMerkleWitness extends MerkleWitness(options + 1) {}
+
 // You can write different public keys to each voter
 const votableAdresses = [
   'B62qjSfWdftx3W27jvzFFaxsK1oeyryWibUcP8TqSWYAi4Q5JJJXjp1',
@@ -38,18 +46,63 @@ class OffChainStorage {
   readonly votersMerkleTree: MerkleTree;
   voteCountMerkleTree: MerkleTree;
   nullifierMerkleMap: MerkleMap;
+  nullifier: Nullifier;
+  voters: Field[];
+  voterCounts: number[];
+  nullifiers: Field[];
 
-  constructor(num_voters: number, options: number, voters: Field[]) {
+  constructor(
+    num_voters: number,
+    options: number,
+    voters: Field[],
+    nullifier: Nullifier
+  ) {
     this.votersMerkleTree = new MerkleTree(num_voters + 1);
     this.voteCountMerkleTree = new MerkleTree(options + 1);
     this.nullifierMerkleMap = new MerkleMap();
     this.votersMerkleTree.fill(voters);
+    this.voters = voters;
+    this.voterCounts = new Array(options).fill(0);
+    this.nullifiers = [];
+    this.nullifier = nullifier;
   }
 
-  updateOffChainState(nullifierHash: Field, voteOption: bigint) {
-    this.nullifierMerkleMap.set(nullifierHash, Field(1));
+  updateOffChainState(nullifier: Nullifier, voteOption: bigint) {
+    // this.nullifierMerkleMap.set(nullifierHash, Field(1));
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
-    this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
+    console.log('Current Vote:', currentVote);
+    // this.voteCountMerkleTree.setLeaf(voteOption, currentVote.add(1));
+    this.nullifierMerkleMap.set(nullifier.key(), Field(1));
+    this.nullifiers.push(nullifier.key());
+    // Add increase vote options in voterCounts
+    const index = Number(voteOption);
+    this.voterCounts[index] += 1;
+  }
+
+  saveOffChainState() {
+    const voters = this.voters;
+    const voterCounts = this.voterCounts;
+    const nullifiers = this.nullifiers;
+    const ojb = {
+      voters: voters.map((v) => v.toString()),
+      voterCounts,
+      nullifiers: nullifiers.map((n) => n.toString()),
+    };
+    return ojb;
+  }
+
+  loadOffChainState(obj: any) {
+    const voters = obj.voters.map((v: string) => Field(v));
+    const voterCounts = obj.voterCounts;
+    const nullifiers = obj.nullifiers.map((n: string) => Field(n));
+    this.voters = voters;
+    this.voterCounts = voterCounts;
+    this.nullifiers = nullifiers;
+    this.votersMerkleTree.fill(voters);
+    this.voteCountMerkleTree.fill(voterCounts.map((v: number) => BigInt(v)));
+    for (let i = 0; i < nullifiers.length; i++) {
+      this.nullifierMerkleMap.set(nullifiers[i], Field(1));
+    }
   }
 }
 
@@ -84,16 +137,42 @@ const functions = {
     return JSON.stringify(isInitialized);
   },
 
-  setOffChainInstance: async (args: {}) => {
+  setOffChainInstance: async (args: { nullifier: Nullifier }) => {
     const publicKeyHashes: Field[] = votableAdresses.map((key) =>
       Poseidon.hash(PublicKey.fromBase58(key).toFields())
     );
+
+    // Type Conversion
+    const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
+
+    // We need mina signer to sign the nullifier
+    console.log('Nullifier:', args.nullifier);
+
     let offChainInstance = new OffChainStorage(
       num_voters,
       options,
-      publicKeyHashes
+      publicKeyHashes,
+      nullifier
     );
     console.log('OffChain Instance Created');
+
+    const cid = 'QmcE4pX4gtcdqEx6trwNUKPRs2pvaPG2LSxnp1PEp6cC6G';
+
+    // Get Offchain State from Remote Server
+    const url = `${process.env.NEXT_BACKEND_URL}/offchain/${cid}`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Make the GET request
+    try {
+      const response = await axios.get(url, { headers: headers });
+      console.log('Response:', response.data);
+      offChainInstance.loadOffChainState(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+
     state.offChainInstance = offChainInstance;
   },
 
@@ -112,42 +191,73 @@ const functions = {
     return JSON.stringify(votingID);
   },
 
-  castVote: async (args: { voteOption: number }) => {
-    const votersMerkleTree = state.offChainInstance!.votersMerkleTree;
+  castVote: async (args: { voteOption: number; nullifier: Nullifier }) => {
+    const nullifier = Nullifier.fromJSON(NullifierToJson(args.nullifier));
+
     const voteCountMerkleTree = state.offChainInstance!.voteCountMerkleTree;
-    const nullifierMerkleMap = state.offChainInstance!.nullifierMerkleMap;
 
-    // TODO: change contract to accept public key instead of private key
+    const offChainInstance = state.offChainInstance!;
+    const option = BigInt(args.voteOption);
 
-    // Those will change
+    offChainInstance.updateOffChainState(
+      state.offChainInstance!.nullifier,
+      option
+    );
+
+    // Save the offChainInstance to file
+    const obj = offChainInstance.saveOffChainState();
+
+    // Save stringified to file
+    const data = JSON.stringify(obj);
+    console.log('New OffChain State:', data);
+
+    // Define the URL and headers
+    const url = `${process.env.NEXT_BACKEND_URL}/offchain`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Make the POST request
+    try {
+      const response = await axios.post(url, obj, { headers: headers });
+      console.log('Response:', response.data);
+    } catch (error) {
+      console.error(error);
+    }
+
+    // Save new states to cache
+    state.offChainInstance = offChainInstance;
+
     // Create Witness
-    // const option = BigInt(args.voteOption);
-    // const votersWitness = votersMerkleTree.getWitness(option);
-    // const votingID: Field = await state.zkapp!.votingID.get();
-    // const nullifierHash = Poseidon.hash(
-    //   args.privateKey.toFields().concat([votingID])
-    // );
-    // const nullifierWitness = nullifierMerkleMap.getWitness(nullifierHash);
+    const votersWitness = new VoterListMerkleWitness(
+      offChainInstance.votersMerkleTree.getWitness(option)
+    );
 
-    // const voteCountsWitness = voteCountMerkleTree.getWitness(option);
-    // const currentVotes = voteCountMerkleTree.getNode(0, option);
+    const voteCountsWitness = new VoteCountMerkleWitness(
+      offChainInstance.voteCountMerkleTree.getWitness(option)
+    );
 
-    // const transaction = await Mina.transaction(() => {
-    //   state.zkapp!.vote(
-    //     args.privateKey,
-    //     votersWitness,
-    //     nullifierWitness,
-    //     voteCountsWitness,
-    //     currentVotes
-    //   );
-    // });
-    // state.transaction = transaction;
+    const votingID = await state.zkapp!.votingID.get();
+    console.log('Voting ID:', votingID);
+
+    let nullifierWitness = Provable.witness(MerkleMapWitness, () =>
+      offChainInstance.nullifierMerkleMap.getWitness(nullifier.key())
+    );
+
+    const currentVotes = voteCountMerkleTree.getNode(0, option);
+
+    const transaction = await Mina.transaction(() => {
+      state.zkapp!.vote(
+        nullifier,
+        votersWitness,
+        nullifierWitness,
+        voteCountsWitness,
+        currentVotes
+      );
+    });
+    state.transaction = transaction;
   },
 
-  // getBallot: async (args: {}) => {
-  //   const currentBallot = await state.zkapp!.ballot.get();
-  //   return JSON.stringify(currentBallot);
-  // },
   // cast: async (args: { candidate: number }) => {
   //   const transaction = await Mina.transaction(() => {
   //     state.zkapp!.cast(UInt32.from(args.candidate));
@@ -190,6 +300,34 @@ if (typeof window !== 'undefined') {
       postMessage(message);
     }
   );
+}
+
+function NullifierToJson(nullifier: Nullifier) {
+  const jsonNullifier = {
+    private: {
+      c: nullifier.private.c.toString(),
+      g_r: {
+        x: nullifier.private.g_r.x.toString(),
+        y: nullifier.private.g_r.y.toString(),
+      },
+      h_m_pk_r: {
+        x: nullifier.private.h_m_pk_r.x.toString(),
+        y: nullifier.private.h_m_pk_r.y.toString(),
+      },
+    },
+    public: {
+      nullifier: {
+        x: nullifier.public.nullifier.x.toString(),
+        y: nullifier.public.nullifier.y.toString(),
+      },
+      s: nullifier.public.s.toString(),
+    },
+    publicKey: {
+      x: nullifier.publicKey.x.toString(),
+      y: nullifier.publicKey.y.toString(),
+    },
+  };
+  return jsonNullifier;
 }
 
 console.log('Web Worker Successfully Initialized.');
