@@ -159,7 +159,7 @@ const functions = {
     const cid = 'QmcE4pX4gtcdqEx6trwNUKPRs2pvaPG2LSxnp1PEp6cC6G';
 
     // Get Offchain State from Remote Server
-    const url = `${process.env.NEXT_BACKEND_URL}/offchain/${cid}`;
+    const url = `https://zk-voting-backend-75cf681f0f1c.herokuapp.com/offchain/${cid}`;
     const headers = {
       'Content-Type': 'application/json',
     };
