@@ -6,12 +6,16 @@ const cors = require('cors');
 const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 
 const app = express();
-const port = 3001; // You can choose any available port
+const port = process.env.PORT || 3001; // You can choose any available port
 
 app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
 
 app.get('/offchain/:cid', async (req, res) => {
   try {
@@ -64,6 +68,43 @@ app.post('/offchain', async (req, res) => {
     console.error('Error forwarding POST request:', error);
     res.status(500).send('Error forwarding request');
   }
+});
+
+app.get('/vote/:voteId', async (req, res) => {
+  try {
+    // Get vote data from mongodb
+    const voteData = {};
+
+    // Send back the response from the target server
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error forwarding GET request:', error);
+    res.status(500).send('Error forwarding request');
+  }
+});
+
+app.post('/vote/create', async (req, res) => {
+  try {
+    // Extract data from the incoming request
+    const data = req.body;
+
+    const voteId = data.voteId;
+    const voteName = data.voteName;
+    const voteDescription = data.voteDescription;
+    const eligibleVoters = data.eligibleVoters;
+
+    // Save data to mongodb
+
+    // Send back the response from the target server
+    res.status(201).send('success');
+  } catch (error) {
+    console.error('Error forwarding POST request:', error);
+    res.status(500).send('Error forwarding request');
+  }
+});
+
+app.put('/vote/:voteId', async (req, res) => {
+  // Update vote data in mongodb
 });
 
 // Start the server
