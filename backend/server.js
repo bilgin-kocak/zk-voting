@@ -4,6 +4,8 @@ const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
+const mongoose = require('mongoose');
+const Vote = require('./models/voteModel');
 
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
@@ -12,6 +14,16 @@ app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
+
+mongoose
+  .connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch((error) =>
+    console.error('Could not connect to MongoDB Atlas:', error)
+  );
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -72,28 +84,28 @@ app.post('/offchain', async (req, res) => {
 
 app.get('/vote/:voteId', async (req, res) => {
   try {
-    // Get vote data from mongodb
-    const voteData = {};
-
-    // Send back the response from the target server
-    res.status(response.status).send(response.data);
+    const vote = await Vote.findOne({ voteId: req.params.voteId });
+    if (!vote) {
+      return res.status(404).send('Vote not found');
+    }
+    res.status(200).send(vote);
   } catch (error) {
-    console.error('Error forwarding GET request:', error);
-    res.status(500).send('Error forwarding request');
+    res.status(500).send(error);
   }
 });
 
 app.post('/vote/create', async (req, res) => {
   try {
-    // Extract data from the incoming request
-    const data = req.body;
-
-    const voteId = data.voteId;
-    const voteName = data.voteName;
-    const voteDescription = data.voteDescription;
-    const eligibleVoters = data.eligibleVoters;
-
     // Save data to mongodb
+    const vote = new Vote({
+      voteID: req.body.voteId,
+      voteName: req.body.voteName,
+      voteDescription: req.body.voteDescription,
+      eligibleVoterList: req.body.eligibleVoterList,
+    });
+
+    const savedVote = await vote.save();
+    // res.status(201).send(savedVote);
 
     // Send back the response from the target server
     res.status(201).send('success');
@@ -103,8 +115,27 @@ app.post('/vote/create', async (req, res) => {
   }
 });
 
-app.put('/vote/:voteId', async (req, res) => {
-  // Update vote data in mongodb
+// Route to update the eligibleVoterList for a vote
+app.put('/votes/:voteId/addVoters', async (req, res) => {
+  const { voteId } = req.params;
+  const { votersToAdd } = req.body; // Expect an array of voter IDs
+
+  try {
+    // Update the document using $addToSet to ensure unique additions
+    const updatedVote = await Vote.findOneAndUpdate(
+      { voteId },
+      { $addToSet: { eligibleVoterList: { $each: votersToAdd } } },
+      { new: true } // Returns the updated document
+    );
+
+    if (!updatedVote) {
+      return res.status(404).send('Vote not found');
+    }
+
+    res.status(200).send(updatedVote);
+  } catch (error) {
+    res.status(500).send(error.toString());
+  }
 });
 
 // Start the server
