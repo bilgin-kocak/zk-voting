@@ -12,6 +12,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
+import axios from 'axios';
 
 export default function Create() {
   const [votingName, setVotingName] = useState('');
@@ -37,10 +38,29 @@ export default function Create() {
     // });
   }, []);
 
-  const handleCreateVoting = () => {
-    console.log('votingName', votingName);
-    console.log('votingDescription', votingDescription);
-    console.log('eligibleAddresses', eligibleAddresses);
+  const handleCreateVoting = async () => {
+    const eligibleAddressesArray = eligibleAddresses.split('\n');
+
+    const url = `${process.env.NEXT_BACKEND_URL}/vote/create`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Send the data to the server POST /vote/create'
+    const data = await axios.post(
+      'http://localhost:3001/vote/create',
+      {
+        voteID: 1,
+        voteName: votingName,
+        voteDescription: votingDescription,
+        eligibleVoterList: eligibleAddressesArray,
+      },
+      { headers }
+    );
+
+    console.log('data', data);
+
+    // TODO: Deploy the contract
   };
 
   return (
@@ -74,6 +94,11 @@ export default function Create() {
             />
           </Flex>
         </Container>
+        <Button
+          className={styles.button}
+          onClick={handleCreateVoting}
+          text="Vote"
+        />
 
         <Button className={styles.button} href="/" text="Go back" />
       </div>
