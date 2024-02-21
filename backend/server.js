@@ -102,6 +102,7 @@ app.post('/vote/create', async (req, res) => {
       voteName: req.body.voteName,
       voteDescription: req.body.voteDescription,
       eligibleVoterList: req.body.eligibleVoterList,
+      offchainCID: req.body.offchainCID,
     });
 
     const savedVote = await vote.save();
