@@ -67,6 +67,12 @@ export default class ZkappWorkerClient {
     });
   }
 
+  deployContract(publicKey: PublicKey) {
+    return this._call('deployContract', {
+      publicKey58: publicKey.toBase58(),
+    });
+  }
+
   // async getBallot(): Promise<any> {
   //   const result = await this._call("getBallot", {});
   //   return JSON.parse(result as string);

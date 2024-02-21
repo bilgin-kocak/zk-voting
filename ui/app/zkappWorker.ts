@@ -123,6 +123,13 @@ const functions = {
   compileContract: async (args: {}) => {
     await state.Votes!.compile();
   },
+  deployContract: async (args: { publicKey58: string }) => {
+    const publicKey = PublicKey.fromBase58(args.publicKey58);
+    const transaction = await Mina.transaction(() => {
+      state.Votes!.deploy();
+    });
+    state.transaction = transaction;
+  },
   fetchAccount: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
     return await fetchAccount({ publicKey });
