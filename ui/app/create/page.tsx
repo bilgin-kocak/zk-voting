@@ -13,6 +13,10 @@ import {
   TextField,
 } from '@radix-ui/themes';
 import axios from 'axios';
+import type ZkappWorkerClient from '../zkappWorkerClient';
+import { wait } from '@/lib/client-side/utils';
+
+let transactionFee = 0.1;
 
 export default function Create() {
   const [votingName, setVotingName] = useState('');
@@ -54,6 +58,7 @@ export default function Create() {
         voteName: votingName,
         voteDescription: votingDescription,
         eligibleVoterList: eligibleAddressesArray,
+        offchainCID: '',
       },
       { headers }
     );
@@ -61,6 +66,45 @@ export default function Create() {
     console.log('data', data);
 
     // TODO: Deploy the contract
+
+    const { Mina, PublicKey, UInt32 } = await import('o1js');
+    const { Votes } = await import('@/contracts/build/src/');
+    const ZkappWorkerClient = (await import('@/app/zkappWorkerClient')).default;
+    const Berkeley = Mina.Network(
+      'https://proxy.berkeley.minaexplorer.com/graphql'
+    );
+    Mina.setActiveInstance(Berkeley);
+
+    console.log('Loading web worker...');
+    const zkappWorkerClient = new ZkappWorkerClient();
+    await wait(5000);
+
+    console.log('Done loading web worker');
+    await zkappWorkerClient.setActiveInstanceToBerkeley();
+
+    const mina = (window as any).mina;
+    const publicKeyBase58: string = (await mina.requestAccounts())[0];
+
+    const publicKey = PublicKey.fromBase58(publicKeyBase58);
+    await zkappWorkerClient.deployContract(publicKey);
+
+    console.log('Creating proof...');
+    await zkappWorkerClient!.proveTransaction();
+
+    console.log('Requesting send transaction...');
+    const transactionJSON = await zkappWorkerClient!.getTransactionJSON();
+
+    console.log('Getting transaction JSON...');
+    const { hash } = await (window as any).mina.sendTransaction({
+      transaction: transactionJSON,
+      feePayer: {
+        fee: transactionFee,
+        memo: '',
+      },
+    });
+
+    const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+    console.log(`View transaction at ${transactionLink}`);
   };
 
   return (
@@ -97,7 +141,7 @@ export default function Create() {
         <Button
           className={styles.button}
           onClick={handleCreateVoting}
-          text="Vote"
+          text="Create Voting"
         />
 
         <Button className={styles.button} href="/" text="Go back" />
