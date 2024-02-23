@@ -139,6 +139,15 @@ app.put('/votes/:voteId/addVoters', async (req, res) => {
   }
 });
 
+app.get('/votes', async (req, res) => {
+  try {
+    const votes = await Vote.find({});
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
