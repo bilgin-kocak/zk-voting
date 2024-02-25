@@ -5,6 +5,7 @@ import styles from './page.module.scss';
 import cn from 'classnames';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { VotingCard } from '@/components/voting-card/VotingCard';
 
 export default function ListVoting() {
   const [votings, setVotings] = useState<any[]>([]);
@@ -28,9 +29,14 @@ export default function ListVoting() {
         <h1>List Voting</h1>
         <ul>
           {votings.map((voting) => (
-            <li key={voting._id}>
-              <a href={`/vote/${voting.voteID}`}>{voting.voteName}</a>
-            </li>
+            <VotingCard
+              key={voting._id}
+              voteName={voting.voteName}
+              voteDescription={voting.voteDescription}
+            />
+            // <li key={voting._id}>
+            //   <a href={`/vote/${voting.voteID}`}>{voting.voteName}</a>
+            // </li>
           ))}
         </ul>
         <Button className={styles.button} href="/" text="Go back" />
