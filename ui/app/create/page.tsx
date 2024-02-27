@@ -52,7 +52,8 @@ export default function Create() {
 
     // Send the data to the server POST /vote/create'
     const data = await axios.post(
-      'http://localhost:3001/vote/create',
+      // 'http://localhost:3001/vote/create',
+      url,
       {
         voteID: 1,
         voteName: votingName,
@@ -84,8 +85,14 @@ export default function Create() {
 
     const mina = (window as any).mina;
     const publicKeyBase58: string = (await mina.requestAccounts())[0];
+    console.log('publicKeyBase58', publicKeyBase58);
 
     const publicKey = PublicKey.fromBase58(publicKeyBase58);
+
+    const res = await zkappWorkerClient.fetchAccount({
+      publicKey: publicKey!,
+    });
+
     await zkappWorkerClient.deployContract(publicKey);
 
     console.log('Creating proof...');
@@ -93,6 +100,7 @@ export default function Create() {
 
     console.log('Requesting send transaction...');
     const transactionJSON = await zkappWorkerClient!.getTransactionJSON();
+    console.log('transactionJSON', transactionJSON);
 
     console.log('Getting transaction JSON...');
     const { hash } = await (window as any).mina.sendTransaction({

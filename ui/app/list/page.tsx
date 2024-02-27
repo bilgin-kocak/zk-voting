@@ -16,7 +16,7 @@ export default function ListVoting() {
       const headers = {
         'Content-Type': 'application/json',
       };
-      const data = await axios.get('http://localhost:3001/votes', { headers });
+      const data = await axios.get(url, { headers });
       console.log('votes', data);
       setVotings(data.data);
     };
