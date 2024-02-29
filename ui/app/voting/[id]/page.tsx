@@ -11,7 +11,7 @@ export default function Voting({ params }: { params: { id: string } }) {
   useEffect(() => {
     // Get the voting from the server
     const getVoting = async () => {
-      const url = `${process.env.NEXT_BACKEND_URL}/vote/${params.id}`;
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/${params.id}`;
       const headers = {
         'Content-Type': 'application/json',
       };

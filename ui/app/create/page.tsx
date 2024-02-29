@@ -15,6 +15,7 @@ import {
 import axios from 'axios';
 import type ZkappWorkerClient from '../zkappWorkerClient';
 import { wait } from '@/lib/client-side/utils';
+import { PrivateKey } from 'o1js';
 
 let transactionFee = 0.1;
 
@@ -45,7 +46,7 @@ export default function Create() {
   const handleCreateVoting = async () => {
     const eligibleAddressesArray = eligibleAddresses.split('\n');
 
-    const url = `${process.env.NEXT_BACKEND_URL}/vote/create`;
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/create`;
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -93,7 +94,20 @@ export default function Create() {
       publicKey: publicKey!,
     });
 
-    await zkappWorkerClient.deployContract(publicKey);
+    await zkappWorkerClient.loadContract();
+    console.log('Compiling zkApp...');
+
+    await zkappWorkerClient.compileContract();
+    console.log('zkApp compiled');
+
+    // let zkAppPrivateKey = PrivateKey.random();
+    // let zkAppAddress = zkAppPrivateKey.toPublicKey();
+
+    // await zkappWorkerClient.initZkappInstance(zkAppAddress);
+
+    await zkappWorkerClient.createDeployTransaction(publicKeyBase58);
+
+    // await zkappWorkerClient.deployContract(publicKey);
 
     console.log('Creating proof...');
     await zkappWorkerClient!.proveTransaction();

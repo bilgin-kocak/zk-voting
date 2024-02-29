@@ -73,6 +73,12 @@ export default class ZkappWorkerClient {
     });
   }
 
+  createDeployTransaction(feePayer: string) {
+    return this._call('createDeployTransaction', {
+      feePayer,
+    });
+  }
+
   // async getBallot(): Promise<any> {
   //   const result = await this._call("getBallot", {});
   //   return JSON.parse(result as string);

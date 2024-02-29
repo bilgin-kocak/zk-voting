@@ -12,6 +12,7 @@ import {
   Provable,
   MerkleMapWitness,
   MerkleWitness,
+  AccountUpdate,
 } from 'o1js';
 import { uploadBuffer } from './helpers';
 import axios from 'axios';
@@ -21,11 +22,17 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 import type { Votes } from '@/contracts/src/Votes';
 
+interface VerificationKeyData {
+  data: string;
+  hash: Field;
+}
+
 const state = {
   Votes: null as null | typeof Votes,
   zkapp: null as null | Votes,
   transaction: null as null | Transaction,
   offChainInstance: null as null | OffChainStorage,
+  verificationKey: null as null | VerificationKeyData | any, //| VerificationKeyData;
 };
 
 const num_voters = 2; // Total Number of Voters
@@ -121,22 +128,61 @@ const functions = {
     state.Votes = Votes;
   },
   compileContract: async (args: {}) => {
-    await state.Votes!.compile();
+    const { verificationKey } = await state.Votes!.compile();
+    state.verificationKey = verificationKey;
   },
   deployContract: async (args: { publicKey58: string }) => {
     const { Votes } = await import('@/contracts/build/src/Votes.js');
     const publicKey = PublicKey.fromBase58(args.publicKey58);
+
     const zkAppPrivateKey = PrivateKey.random();
+    const zkAppPrivateKey58 = zkAppPrivateKey.toBase58();
+
+    console.log('zkAppPrivateKey:', zkAppPrivateKey);
     const zkAppAddress = zkAppPrivateKey.toPublicKey();
+    console.log('zkAppAddress:', zkAppAddress.toBase58());
     const VotesCompiled = await Votes.compile();
     console.log('VotesCompiled:', VotesCompiled);
     const zkAppInstance = new Votes(zkAppAddress);
 
     const transaction = await Mina.transaction(() => {
-      zkAppInstance.deploy();
+      // AccountUpdate.fundNewAccount(args.publicKey58);
+      zkAppInstance.deploy({
+        zkappKey: zkAppPrivateKey,
+        verificationKey: VotesCompiled.verificationKey as VerificationKeyData,
+      });
     });
+
+    // transaction.sign([zkAppPrivateKey]);
     console.log('zkApp deployed');
     // return transaction;
+    state.transaction = transaction;
+  },
+
+  createDeployTransaction: async (args: { feePayer: string }) => {
+    if (state === null) {
+      throw Error('state is null');
+    }
+    // const zkAppPrivateKey: PrivateKey = PrivateKey.fromBase58(
+    //   args.privateKey58
+    // );
+
+    let zkAppPrivateKey = PrivateKey.random();
+    let zkAppAddress = zkAppPrivateKey.toPublicKey();
+
+    // await initZkappInstance(zkAppAddress);
+    // const zkAppAddress = zkAppPrivateKey.toPublicKey();
+    state.zkapp = new state.Votes!(zkAppAddress);
+
+    const feePayerPublickKey = PublicKey.fromBase58(args.feePayer);
+    const transaction = await Mina.transaction(feePayerPublickKey, () => {
+      // AccountUpdate.fundNewAccount(feePayerPublickKey);
+      state.zkapp!.deploy({
+        zkappKey: zkAppPrivateKey,
+        verificationKey: state.verificationKey as VerificationKeyData,
+      });
+    });
+    transaction.sign([zkAppPrivateKey]);
     state.transaction = transaction;
   },
 
@@ -236,7 +282,7 @@ const functions = {
     console.log('New OffChain State:', data);
 
     // Define the URL and headers
-    const url = `${process.env.NEXT_BACKEND_URL}/offchain`;
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/offchain`;
     const headers = {
       'Content-Type': 'application/json',
     };

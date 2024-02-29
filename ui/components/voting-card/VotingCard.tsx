@@ -6,7 +6,7 @@ export function VotingCard({ voteName = '', voteDescription = '' }) {
   return (
     <>
       <Card style={{ maxWidth: 500 }}>
-        <a href="#">
+        <a href="/">
           <Flex gap="3" align="center">
             <Avatar
               size="3"

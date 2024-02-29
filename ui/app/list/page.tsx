@@ -12,7 +12,8 @@ export default function ListVoting() {
   useEffect(() => {
     // Get votings from the server
     const getVotings = async () => {
-      const url = `${process.env.NEXT_BACKEND_URL}/vote/list`;
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/votes`;
+      console.log('url', url);
       const headers = {
         'Content-Type': 'application/json',
       };
