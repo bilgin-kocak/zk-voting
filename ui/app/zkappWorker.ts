@@ -159,7 +159,9 @@ const functions = {
     state.transaction = transaction;
   },
 
-  createDeployTransaction: async (args: { feePayer: string }) => {
+  createDeployTransaction: async (args: {
+    feePayer: string;
+  }): Promise<string> => {
     if (state === null) {
       throw Error('state is null');
     }
@@ -184,6 +186,7 @@ const functions = {
     });
     transaction.sign([zkAppPrivateKey]);
     state.transaction = transaction;
+    return zkAppAddress.toBase58();
   },
 
   getDeployTransactionJSON: async (args: { publicKey58: string }) => {

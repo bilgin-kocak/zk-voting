@@ -73,7 +73,7 @@ export default class ZkappWorkerClient {
     });
   }
 
-  createDeployTransaction(feePayer: string) {
+  createDeployTransaction(feePayer: string): Promise<any> {
     return this._call('createDeployTransaction', {
       feePayer,
     });

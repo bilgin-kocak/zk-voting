@@ -51,22 +51,6 @@ export default function Create() {
       'Content-Type': 'application/json',
     };
 
-    // Send the data to the server POST /vote/create'
-    const data = await axios.post(
-      // 'http://localhost:3001/vote/create',
-      url,
-      {
-        voteID: 1,
-        voteName: votingName,
-        voteDescription: votingDescription,
-        eligibleVoterList: eligibleAddressesArray,
-        offchainCID: '',
-      },
-      { headers }
-    );
-
-    console.log('data', data);
-
     // TODO: Deploy the contract
 
     const { Mina, PublicKey, UInt32 } = await import('o1js');
@@ -105,7 +89,8 @@ export default function Create() {
 
     // await zkappWorkerClient.initZkappInstance(zkAppAddress);
 
-    await zkappWorkerClient.createDeployTransaction(publicKeyBase58);
+    const zkAppAddress: string =
+      await zkappWorkerClient.createDeployTransaction(publicKeyBase58);
 
     // await zkappWorkerClient.deployContract(publicKey);
 
@@ -127,6 +112,23 @@ export default function Create() {
 
     const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
     console.log(`View transaction at ${transactionLink}`);
+
+    // Send the data to the server POST /vote/create'
+    const data = await axios.post(
+      // 'http://localhost:3001/vote/create',
+      url,
+      {
+        voteID: 1,
+        voteName: votingName,
+        voteDescription: votingDescription,
+        eligibleVoterList: eligibleAddressesArray,
+        zkAppAddress: zkAppAddress,
+        offchainCID: '',
+      },
+      { headers }
+    );
+
+    console.log('data', data);
   };
 
   return (
