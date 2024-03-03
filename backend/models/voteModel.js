@@ -5,6 +5,7 @@ const voteSchema = new mongoose.Schema({
   voteName: String,
   voteDescription: String,
   eligibleVoterList: [String], // Array of voter IDs
+  zkAppAdress: String,
   offchainCID: String,
 });
 

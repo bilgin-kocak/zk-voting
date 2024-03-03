@@ -102,6 +102,7 @@ app.post('/vote/create', async (req, res) => {
       voteName: req.body.voteName,
       voteDescription: req.body.voteDescription,
       eligibleVoterList: req.body.eligibleVoterList,
+      zkAppAdress: req.body.zkAppAdress,
       offchainCID: req.body.offchainCID,
     });
 
