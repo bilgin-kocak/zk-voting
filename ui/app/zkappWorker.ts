@@ -178,7 +178,7 @@ const functions = {
 
     const feePayerPublickKey = PublicKey.fromBase58(args.feePayer);
     const transaction = await Mina.transaction(feePayerPublickKey, () => {
-      // AccountUpdate.fundNewAccount(feePayerPublickKey);
+      AccountUpdate.fundNewAccount(feePayerPublickKey);
       state.zkapp!.deploy({
         zkappKey: zkAppPrivateKey,
         verificationKey: state.verificationKey as VerificationKeyData,
