@@ -2,11 +2,15 @@ import { useEffect } from 'react';
 import cn from 'classnames';
 import { Card, Flex, Avatar, Box, Text } from '@radix-ui/themes';
 
-export function VotingCard({ voteName = '', voteDescription = '' }) {
+export function VotingCard({
+  voteName = '',
+  voteDescription = '',
+  zkAppAddress = '',
+}) {
   return (
     <>
       <Card style={{ maxWidth: 500 }}>
-        <a href="/">
+        <a href={`/voting/${zkAppAddress}`}>
           <Flex gap="3" align="center">
             <Avatar
               size="3"
