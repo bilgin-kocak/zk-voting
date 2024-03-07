@@ -113,12 +113,14 @@ export default function Create() {
     const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
     console.log(`View transaction at ${transactionLink}`);
 
-    // Get voteID from the server
-    const voteID = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/getVoteID`
-    );
+    // // Get voteID from the server
+    // const voteID = await axios.get(
+    //   `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/getVoteID`
+    // );
 
-    console.log('voteID', voteID);
+    // console.log('voteID', voteID);
+
+    console.log('zkAppAddress', zkAppAddress);
 
     // Send the data to the server POST /vote/create'
     const data = await axios.post(

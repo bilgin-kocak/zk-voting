@@ -34,7 +34,9 @@ export default function ListVoting() {
               key={voting._id}
               voteName={voting.voteName}
               voteDescription={voting.voteDescription}
-              zkAppAddress={'trial'}
+              zkAppAddress={
+                voting.zkAppAddress ? voting.zkAppAddress : 'not-found'
+              }
             />
             // <li key={voting._id}>
             //   <a href={`/vote/${voting.voteID}`}>{voting.voteName}</a>

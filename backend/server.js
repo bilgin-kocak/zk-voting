@@ -82,9 +82,9 @@ app.post('/offchain', async (req, res) => {
   }
 });
 
-app.get('/vote/:voteId', async (req, res) => {
+app.get('/vote/:zkAppAddress', async (req, res) => {
   try {
-    const vote = await Vote.findOne({ voteId: req.params.voteId });
+    const vote = await Vote.findOne({ zkAppAddress: req.params.zkAppAddress });
     if (!vote) {
       return res.status(404).send('Vote not found');
     }
@@ -102,7 +102,7 @@ app.post('/vote/create', async (req, res) => {
       voteName: req.body.voteName,
       voteDescription: req.body.voteDescription,
       eligibleVoterList: req.body.eligibleVoterList,
-      zkAppAdress: req.body.zkAppAdress,
+      zkAppAddress: req.body.zkAppAddress,
       offchainCID: req.body.offchainCID,
     });
 
