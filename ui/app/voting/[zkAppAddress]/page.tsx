@@ -13,7 +13,11 @@ import type ZkappWorkerClient from '../../zkappWorkerClient';
 
 let transactionFee = 0.1;
 
-export default function Voting({ params }: { params: { id: string } }) {
+export default function Voting({
+  params,
+}: {
+  params: { zkAppAddress: string };
+}) {
   const [alert, setAlert] = useState({
     message: '',
     error: false,
@@ -199,21 +203,65 @@ export default function Voting({ params }: { params: { id: string } }) {
     return nullifierJson;
   };
 
+  const onCastVote = async () => {
+    try {
+      setState((prev) => ({ ...prev, voting: true }));
+
+      console.log('Creating a transaction...');
+
+      await state.zkappWorkerClient!.fetchAccount({
+        publicKey: state.publicKey!,
+      });
+
+      const nullifier = await createNullifier();
+
+      await state.zkappWorkerClient!.castVote({
+        voteOption: candidate,
+        nullifier: nullifier!,
+      });
+
+      console.log('New Offchain State Uploaded');
+
+      console.log('Creating proof...');
+      await state.zkappWorkerClient!.proveTransaction();
+
+      console.log('Requesting send transaction...');
+      const transactionJSON =
+        await state.zkappWorkerClient!.getTransactionJSON();
+
+      // console.log('Getting transaction JSON...');
+      // const { hash } = await (window as any).mina.sendTransaction({
+      //   transaction: transactionJSON,
+      //   feePayer: {
+      //     fee: transactionFee,
+      //     memo: '',
+      //   },
+      // });
+
+      // const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+      // console.log(`View transaction at ${transactionLink}`);
+      // setTransactionLink(transactionLink);
+      setState((prev) => ({ ...prev, voted: true }));
+    } catch (error) {
+      console.error(error);
+      setAlert({ message: 'An error occurred', error: true });
+    }
+    setState((prev) => ({ ...prev, voting: false }));
+  };
+
   const [voting, setVoting] = useState<any>({});
   useEffect(() => {
     // Get the voting from the server
     const getVoting = async () => {
-      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/${params.id}`;
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/${params.zkAppAddress}`;
+      console.log('url', url);
       const headers = {
         'Content-Type': 'application/json',
       };
       try {
-        const data = await axios.get(
-          `http://localhost:3001/vote/${params.id}`,
-          {
-            headers,
-          }
-        );
+        const data = await axios.get(url, {
+          headers,
+        });
         console.log('vote', data);
         setVoting(data.data);
       } catch (error) {
@@ -227,12 +275,19 @@ export default function Voting({ params }: { params: { id: string } }) {
       <div className={styles.content}>
         {voting && voting.voteName ? (
           <>
-            <h1>Welcome to the voting {params.id}</h1>
             <h1>{voting.voteName}</h1>
+            <p>{voting.voteDescription}</p>
+            <p>Voting Contract {params.zkAppAddress}</p>
           </>
         ) : (
-          <h1>No voting found wtih given id</h1>
+          <h1>No voting found wtih given contract address</h1>
         )}
+
+        <Candidates
+          onCastVote={(num) => {
+            setCandidate(num);
+          }}
+        />
 
         <div className={styles.buttons}>
           {!state.hasBeenSetup && !state.voted && (
@@ -242,6 +297,30 @@ export default function Voting({ params }: { params: { id: string } }) {
               loading={state.connecting}
               loadingText="Connecting..."
             />
+          )}
+          {!state.connecting &&
+            state.hasBeenSetup &&
+            state.hasWallet &&
+            !state.voted && (
+              <Button
+                onClick={onCastVote}
+                text="Vote"
+                theme="primary"
+                loading={state.voting}
+                loadingText="Voting..."
+                disabled={candidate < 0}
+              />
+            )}
+          {state.voted && (
+            <>
+              <Button href="/results" theme="primary" text="Show results" />
+              <Button
+                href={transactionlink}
+                theme="transparent"
+                text="View transaction"
+                openLinkInNewTab={true}
+              />
+            </>
           )}
         </div>
       </div>
