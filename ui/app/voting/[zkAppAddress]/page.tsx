@@ -313,7 +313,6 @@ export default function Voting({
             )}
           {state.voted && (
             <>
-              <Button href="/results" theme="primary" text="Show results" />
               <Button
                 href={transactionlink}
                 theme="transparent"
