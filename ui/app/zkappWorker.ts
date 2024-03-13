@@ -131,33 +131,6 @@ const functions = {
     const { verificationKey } = await state.Votes!.compile();
     state.verificationKey = verificationKey;
   },
-  deployContract: async (args: { publicKey58: string }) => {
-    const { Votes } = await import('@/contracts/build/src/Votes.js');
-    const publicKey = PublicKey.fromBase58(args.publicKey58);
-
-    const zkAppPrivateKey = PrivateKey.random();
-    const zkAppPrivateKey58 = zkAppPrivateKey.toBase58();
-
-    console.log('zkAppPrivateKey:', zkAppPrivateKey);
-    const zkAppAddress = zkAppPrivateKey.toPublicKey();
-    console.log('zkAppAddress:', zkAppAddress.toBase58());
-    const VotesCompiled = await Votes.compile();
-    console.log('VotesCompiled:', VotesCompiled);
-    const zkAppInstance = new Votes(zkAppAddress);
-
-    const transaction = await Mina.transaction(() => {
-      // AccountUpdate.fundNewAccount(args.publicKey58);
-      zkAppInstance.deploy({
-        zkappKey: zkAppPrivateKey,
-        verificationKey: VotesCompiled.verificationKey as VerificationKeyData,
-      });
-    });
-
-    // transaction.sign([zkAppPrivateKey]);
-    console.log('zkApp deployed');
-    // return transaction;
-    state.transaction = transaction;
-  },
 
   createDeployTransaction: async (args: {
     feePayer: string;

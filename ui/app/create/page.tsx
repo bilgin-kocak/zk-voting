@@ -15,7 +15,6 @@ import {
 import axios from 'axios';
 import type ZkappWorkerClient from '../zkappWorkerClient';
 import { wait } from '@/lib/client-side/utils';
-import { PrivateKey } from 'o1js';
 
 let transactionFee = 0.1;
 
@@ -84,15 +83,8 @@ export default function Create() {
     await zkappWorkerClient.compileContract();
     console.log('zkApp compiled');
 
-    // let zkAppPrivateKey = PrivateKey.random();
-    // let zkAppAddress = zkAppPrivateKey.toPublicKey();
-
-    // await zkappWorkerClient.initZkappInstance(zkAppAddress);
-
     const zkAppAddress: string =
       await zkappWorkerClient.createDeployTransaction(publicKeyBase58);
-
-    // await zkappWorkerClient.deployContract(publicKey);
 
     console.log('Creating proof...');
     await zkappWorkerClient!.proveTransaction();
