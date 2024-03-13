@@ -119,7 +119,7 @@ export default function Voting({
 
         // const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
         const zkappPublicKey = PublicKey.fromBase58(
-          'B62qpGfrPQKvqpU1jUZwxmbqcmWY1FYgYkgpMNpRHDv8g4E94hdXswg'
+          params.zkAppAddress.toString()
         );
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 

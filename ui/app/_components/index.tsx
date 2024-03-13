@@ -159,7 +159,7 @@ export default function Content() {
 
         // const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
         const zkappPublicKey = PublicKey.fromBase58(
-          'B62qpGfrPQKvqpU1jUZwxmbqcmWY1FYgYkgpMNpRHDv8g4E94hdXswg'
+          'B62qrYyPzTkg5cDS4Rw3tmzKajqFfmJEeYUQmKehNehsLCXmZa6NSvH'
         );
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 
@@ -241,6 +241,11 @@ export default function Content() {
     console.log('typeof nullifierJson', typeof nullifierJson);
 
     return nullifierJson;
+  };
+
+  const deployContract = async () => {
+    // await (window as any).mina?.sendTransaction({
+    // })
   };
 
   return (
