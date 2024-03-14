@@ -39,9 +39,12 @@ export default function Voting({
   const [electionResults, setElectionResults] = useLocalStorage(
     'electionResults',
     {
-      candidates: Array(8).fill(0) as number[],
+      candidates: Array(2).fill(0) as number[],
     }
   );
+
+  const [votingResult, setVotingResult] = useState<number[]>([]);
+  console.log('votingResult', votingResult);
 
   useEffect(() => {
     (async () => {
@@ -269,7 +272,42 @@ export default function Voting({
       }
     };
     getVoting();
+
+    getVotingResults();
   }, []);
+
+  const getVotingResults = async () => {
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/${params.zkAppAddress}`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    try {
+      const data = await axios.get(url, {
+        headers,
+      });
+      console.log('results', data);
+
+      // Get offchain data
+      const offchainCID = data.data.offchainCID;
+
+      // Get offchain data from IPFS
+      const offchainData = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/offchain/${offchainCID}`,
+        {
+          headers,
+        }
+      );
+
+      console.log('offchainData', offchainData);
+
+      const voterCounts = offchainData.data.voterCounts;
+      console.log('voterCounts', voterCounts);
+      setVotingResult(voterCounts);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>
@@ -311,6 +349,15 @@ export default function Voting({
                 disabled={candidate < 0}
               />
             )}
+          {votingResult && votingResult.length > 0 && (
+            <>
+              <h2>Results</h2>
+              <ul>
+                <li>Yes : {votingResult[0]}</li>
+                <li>No : {votingResult[1]}</li>
+              </ul>
+            </>
+          )}
           {state.voted && (
             <>
               <Button
