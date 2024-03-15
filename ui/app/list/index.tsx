@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@/components/button/Button';
 import Candidates from '../_components/candidates/candidates';
-import styles from './page.module.scss';
+import styles from './index.module.scss';
 import cn from 'classnames';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
