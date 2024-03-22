@@ -44,6 +44,11 @@ export default function ListVoting() {
           ))}
         </ul>
         <Button className={styles.button} href="/create" text="Create Voting" />
+        <Button
+          className={styles.button}
+          href="/related-voting"
+          text="Your Voting"
+        />
         <Button className={styles.button} href="/" text="Go back" />
       </div>
     </div>

@@ -149,6 +149,20 @@ app.get('/votes', async (req, res) => {
   }
 });
 
+// Get related votes by zkAppAddress
+// This won't return one vote, but all votes related to the zkAppAddress
+app.get('/votes/:zkAppAddress', async (req, res) => {
+  try {
+    // Get all votes related to the zkAppAddress
+    const votes = await Vote.find({
+      eligibleVoterList: { $elemMatch: { $eq: req.params.zkAppAddress } },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
