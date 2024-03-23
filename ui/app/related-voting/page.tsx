@@ -43,8 +43,10 @@ export default function RelatedVotings() {
       console.log('votes', data);
       setRelatedVotings(data.data);
     };
-    getRelatedVotings();
-  }, [state.hasBeenSetup]);
+    if (state.publicKey) {
+      getRelatedVotings();
+    }
+  }, [state.publicKey]);
 
   const onConnect = async () => {
     try {
@@ -107,8 +109,8 @@ export default function RelatedVotings() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h1>Related Voting</h1>
-        <p>Related voting will be shown here.</p>
+        <h1>Votings</h1>
+        <p>Votings that you are eligible to vote.</p>
 
         {state.hasBeenSetup && (
           <div>
