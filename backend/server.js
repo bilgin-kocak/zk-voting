@@ -104,6 +104,8 @@ app.post('/vote/create', async (req, res) => {
       eligibleVoterList: req.body.eligibleVoterList,
       zkAppAddress: req.body.zkAppAddress,
       offchainCID: req.body.offchainCID,
+      startTimestamp: req.body.startTimestamp,
+      endTimestamp: req.body.endTimestamp,
     });
 
     const savedVote = await vote.save();
@@ -140,9 +142,40 @@ app.put('/votes/:voteId/addVoters', async (req, res) => {
   }
 });
 
+// This route will return all votes that are currently active
 app.get('/votes', async (req, res) => {
   try {
-    const votes = await Vote.find({});
+    const now = Date.now();
+    const votes = await Vote.find({
+      startTimestamp: { $lte: now },
+      endTimestamp: { $gte: now },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// This route will return all votes that are past
+app.get('/past-votes', async (req, res) => {
+  try {
+    const now = Date.now();
+    const votes = await Vote.find({
+      startTimestamp: { $gte: now },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// This route will return all votes that are future
+app.get('/future-votes', async (req, res) => {
+  try {
+    const now = Date.now();
+    const votes = await Vote.find({
+      endTimestamp: { $lte: now },
+    });
     res.status(200).send(votes);
   } catch (error) {
     res.status(500).send(error);

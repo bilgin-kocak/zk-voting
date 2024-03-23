@@ -7,6 +7,8 @@ const voteSchema = new mongoose.Schema({
   eligibleVoterList: [String], // Array of voter IDs
   zkAppAddress: String,
   offchainCID: String,
+  startTimestamp: Number,
+  endTimestamp: Number,
 });
 
 module.exports = mongoose.model('Vote', voteSchema);

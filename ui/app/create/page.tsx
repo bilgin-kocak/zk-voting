@@ -22,25 +22,8 @@ export default function Create() {
   const [votingName, setVotingName] = useState('');
   const [votingDescription, setVotingDescription] = useState('');
   const [eligibleAddresses, setEligibleAddresses] = useState('');
-
-  useEffect(() => {
-    // const votingName = document.getElementById('voting-name') as HTMLInputElement;
-    // const votingDescription = document.getElementById(
-    //   'voting-description'
-    // ) as HTMLTextAreaElement;
-    // const eligibleAddresses = document.getElementById(
-    //   'eligible-addresses'
-    // ) as HTMLTextAreaElement;
-    // votingName.addEventListener('input', () => {
-    //   setVotingName(votingName.value);
-    // });
-    // votingDescription.addEventListener('input', () => {
-    //   setVotingDescription(votingDescription.value);
-    // });
-    // eligibleAddresses.addEventListener('input', () => {
-    //   setEligibleAddresses(eligibleAddresses.value);
-    // });
-  }, []);
+  const [votingStartDate, setVotingStartDate] = useState('');
+  const [votingEndDate, setVotingEndDate] = useState('');
 
   const handleCreateVoting = async () => {
     const eligibleAddressesArray = eligibleAddresses.split('\n');
@@ -105,18 +88,14 @@ export default function Create() {
     const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
     console.log(`View transaction at ${transactionLink}`);
 
-    // // Get voteID from the server
-    // const voteID = await axios.get(
-    //   `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/getVoteID`
-    // );
-
-    // console.log('voteID', voteID);
-
     console.log('zkAppAddress', zkAppAddress);
+
+    // Convert start and end date to timestamp
+    const startTimestamp = new Date(votingStartDate).getTime();
+    const endTimestamp = new Date(votingEndDate).getTime();
 
     // Send the data to the server POST /vote/create'
     const data = await axios.post(
-      // 'http://localhost:3001/vote/create',
       url,
       {
         voteID: 1,
@@ -125,6 +104,8 @@ export default function Create() {
         eligibleVoterList: eligibleAddressesArray,
         zkAppAddress: zkAppAddress,
         offchainCID: '',
+        startTimestamp: startTimestamp,
+        endTimestamp: endTimestamp,
       },
       { headers }
     );
@@ -160,6 +141,17 @@ export default function Create() {
               placeholder="B62qjSfWdftx3W27jvzFFaxsK1oeyryWibUcP8TqSWYAi4Q5JJJXjp1"
               value={eligibleAddresses}
               onChange={(e) => setEligibleAddresses(e.target.value)}
+            />
+            <label>Voting Start Date</label>
+            <TextField.Input
+              type="date"
+              onChange={(e) => setVotingStartDate(e.target.value)}
+            />
+
+            <label>Voting End Date</label>
+            <TextField.Input
+              type="date"
+              onChange={(e) => setVotingEndDate(e.target.value)}
             />
           </Flex>
         </Container>
