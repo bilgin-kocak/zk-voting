@@ -24,6 +24,7 @@ export default function Create() {
   const [eligibleAddresses, setEligibleAddresses] = useState('');
   const [votingStartDate, setVotingStartDate] = useState('');
   const [votingEndDate, setVotingEndDate] = useState('');
+  const [currentStep, setCurrentStep] = useState('');
 
   const handleCreateVoting = async () => {
     const eligibleAddressesArray = eligibleAddresses.split('\n');
@@ -44,10 +45,12 @@ export default function Create() {
     Mina.setActiveInstance(Berkeley);
 
     console.log('Loading web worker...');
+    setCurrentStep('Loading web worker...');
     const zkappWorkerClient = new ZkappWorkerClient();
     await wait(5000);
 
     console.log('Done loading web worker');
+    setCurrentStep('Done loading web worker');
     await zkappWorkerClient.setActiveInstanceToBerkeley();
 
     const mina = (window as any).mina;
@@ -62,17 +65,21 @@ export default function Create() {
 
     await zkappWorkerClient.loadContract();
     console.log('Compiling zkApp...');
+    setCurrentStep('Compiling zkApp...');
 
     await zkappWorkerClient.compileContract();
     console.log('zkApp compiled');
+    setCurrentStep('zkApp compiled');
 
     const zkAppAddress: string =
       await zkappWorkerClient.createDeployTransaction(publicKeyBase58);
 
     console.log('Creating proof...');
+    setCurrentStep('Creating proof for deploy transaction...');
     await zkappWorkerClient!.proveTransaction();
 
     console.log('Requesting send transaction...');
+    setCurrentStep('Requesting send deploy transaction...');
     const transactionJSON = await zkappWorkerClient!.getTransactionJSON();
     console.log('transactionJSON', transactionJSON);
 
@@ -111,6 +118,48 @@ export default function Create() {
     );
 
     console.log('data', data);
+
+    // Initialize the contract
+    await zkappWorkerClient.initZkappInstance(
+      PublicKey.fromBase58(zkAppAddress)
+    );
+    setCurrentStep('Initializing zkApp instance...');
+
+    let isInitialized = await zkappWorkerClient.getIsInitialized();
+    console.log('isInitialized', isInitialized);
+    if (isInitialized === 'true') {
+      isInitialized = true;
+    } else {
+      isInitialized = false;
+    }
+
+    if (!isInitialized) {
+      await zkappWorkerClient.initState();
+
+      console.log('Creating proof...');
+      await zkappWorkerClient!.proveTransaction();
+
+      console.log('Requesting send transaction...');
+      const transactionJSON = await zkappWorkerClient!.getTransactionJSON();
+
+      console.log('Getting transaction JSON...');
+      const { hash } = await (window as any).mina.sendTransaction({
+        transaction: transactionJSON,
+        feePayer: {
+          fee: transactionFee,
+          memo: '',
+        },
+      });
+
+      const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+      console.log(`View transaction at ${transactionLink}`);
+    } else {
+      const currentVotingID = await zkappWorkerClient.getVotingID();
+
+      console.log('currentVotingID', currentVotingID);
+    }
+    console.log('ZkApp initialized');
+    setCurrentStep('Contract Deployed and Initialized!');
   };
 
   return (
@@ -158,7 +207,7 @@ export default function Create() {
         <Button
           className={styles.button}
           onClick={handleCreateVoting}
-          text="Create Voting"
+          text={currentStep ? currentStep : 'Create Voting'}
         />
 
         <Button className={styles.button} href="/" text="Go back" />
