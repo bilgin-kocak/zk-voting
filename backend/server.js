@@ -6,7 +6,7 @@ const cors = require('cors');
 const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 const mongoose = require('mongoose');
 const Vote = require('./models/voteModel');
-
+const Secret = require('./models/secretModel');
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
 
@@ -191,6 +191,48 @@ app.get('/votes/:zkAppAddress', async (req, res) => {
       eligibleVoterList: { $elemMatch: { $eq: req.params.zkAppAddress } },
     });
     res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Vote encytpted
+app.get('/fhe-vote', async (req, res) => {
+  try {
+    const voteResult = req.body.voteResult;
+    const newVote = req.body.newVote;
+    const zkAppAddress = req.body.zkAppAddress;
+
+    // Encrypt vote result
+    const result = await encryptVoteResult(voteResult, newVote);
+
+    // save secret key to db
+    const secretKey = result.secretKey;
+    const secret = new Secret({
+      zkAppAddress: zkAppAddress,
+      secretKey: secretKey,
+    });
+
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/decrypt-vote-result', async (req, res) => {
+  try {
+    const voteResultCipherText = req.body.voteResultCipherText;
+    const zkAppAddress = req.body.zkAppAddress;
+
+    const secret = await Secret.findOne({ zkAppAddress: zkAppAddress });
+    if (!secret) {
+      return res.status(404).send('Secret not found');
+    }
+
+    const secretKey = secret.secretKey;
+    const result = await decryptVoteResult(secretKey, voteResultCipherText);
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
   }
