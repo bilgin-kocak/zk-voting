@@ -5,4 +5,4 @@ const secretSchema = new mongoose.Schema({
   secretKey: String,
 });
 
-module.exports = mongoose.model('Vote', secretSchema);
+module.exports = mongoose.model('Secret', secretSchema);
