@@ -232,17 +232,17 @@ export default function Voting({
       const transactionJSON =
         await state.zkappWorkerClient!.getTransactionJSON();
 
-      // console.log('Getting transaction JSON...');
-      // const { hash } = await (window as any).mina.sendTransaction({
-      //   transaction: transactionJSON,
-      //   feePayer: {
-      //     fee: transactionFee,
-      //     memo: '',
-      //   },
-      // });
+      console.log('Getting transaction JSON...');
+      const { hash } = await (window as any).mina.sendTransaction({
+        transaction: transactionJSON,
+        feePayer: {
+          fee: transactionFee,
+          memo: '',
+        },
+      });
 
-      // const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
-      // console.log(`View transaction at ${transactionLink}`);
+      const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+      console.log(`View transaction at ${transactionLink}`);
       // setTransactionLink(transactionLink);
       setState((prev) => ({ ...prev, voted: true }));
     } catch (error) {
@@ -271,7 +271,7 @@ export default function Voting({
         console.error(error);
       }
     };
-    getVoting();
+    // getVoting();
 
     getVotingResults();
   }, []);
@@ -290,6 +290,9 @@ export default function Voting({
       // Get offchain data
       const offchainCID = data.data.offchainCID;
 
+      if (!offchainCID) {
+        return;
+      }
       // Get offchain data from IPFS
       const offchainData = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/offchain/${offchainCID}`,
@@ -315,10 +318,12 @@ export default function Voting({
           <>
             <h1>{voting.voteName}</h1>
             <p>{voting.voteDescription}</p>
+            <p>Start: {voting.startTimestamp}</p>
+            <p>End: {voting.endTimestamp}</p>
             <p>Voting Contract {params.zkAppAddress}</p>
           </>
         ) : (
-          <h1>No voting found wtih given contract address</h1>
+          <h1>No voting found with given contract address</h1>
         )}
 
         <Candidates

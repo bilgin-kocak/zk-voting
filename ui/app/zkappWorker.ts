@@ -74,7 +74,11 @@ class OffChainStorage {
     this.nullifier = nullifier;
   }
 
-  updateOffChainState(nullifier: Nullifier, voteOption: bigint) {
+  updateOffChainState(
+    nullifier: Nullifier,
+    voteOption: bigint,
+    zkAppAddress: string
+  ) {
     // this.nullifierMerkleMap.set(nullifierHash, Field(1));
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
     console.log('Current Vote:', currentVote);
@@ -83,6 +87,28 @@ class OffChainStorage {
     this.nullifiers.push(nullifier.key());
     // Add increase vote options in voterCounts
     const index = Number(voteOption);
+    // Use FHE to add 1 to the vote count
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}//fhe-vote`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    // Send get request with body parameters
+    // voteResult, newVote, zkAppAddress
+    const data = {
+      voteResult: this.voterCounts,
+      newVote: index,
+      zkAppAddress: zkAppAddress,
+    };
+    // Make the POST request
+    try {
+      const response = axios.get(url, {
+        headers: headers,
+        data: data,
+      });
+      console.log('Response:', response);
+    } catch (error) {
+      console.error(error);
+    }
     this.voterCounts[index] += 1;
   }
 
@@ -247,7 +273,8 @@ const functions = {
 
     offChainInstance.updateOffChainState(
       state.offChainInstance!.nullifier,
-      option
+      option,
+      state.zkapp!.address.toBase58()
     );
 
     // Save the offChainInstance to file

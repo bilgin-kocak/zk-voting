@@ -124,6 +124,8 @@ export default function RelatedVotings() {
                   zkAppAddress={
                     voting.zkAppAddress ? voting.zkAppAddress : 'not-found'
                   }
+                  startTimestamp={voting.startTimestamp}
+                  endTimestamp={voting.endTimestamp}
                 />
                 // <li key={voting._id}>
                 //   <a href={`/vote/${voting.voteID}`}>{voting.voteName}</a>

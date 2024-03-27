@@ -1,0 +1,19 @@
+.votingCard {
+    font: 400 12px / 12px "Monument Grotesk", sans-serif;
+    padding: 6.4px 16px 16px;
+    vertical-align: baseline;
+    appearance: none;
+    color: rgb(255, 255, 255);
+    text-decoration: none solid rgb(255, 255, 255);
+    transition: background 0.2s ease-out 0s;
+    box-sizing: border-box;
+    background-color: rgb(45, 45, 45);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transform-style: preserve-3d;
+    width: 368px;
+    border-radius: 4px 1px;
+    border: 1px solid rgb(255, 255, 255);
+}
