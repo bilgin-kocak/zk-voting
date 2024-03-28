@@ -213,6 +213,9 @@ app.get('/fhe-vote', async (req, res) => {
       secretKey: secretKey,
     });
 
+    // Save the secret key to the database
+    secret.save();
+
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
