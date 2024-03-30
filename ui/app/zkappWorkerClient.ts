@@ -67,13 +67,7 @@ export default class ZkappWorkerClient {
     });
   }
 
-  deployContract(publicKey: PublicKey) {
-    return this._call('deployContract', {
-      publicKey58: publicKey.toBase58(),
-    });
-  }
-
-  createDeployTransaction(feePayer: string) {
+  createDeployTransaction(feePayer: string): Promise<any> {
     return this._call('createDeployTransaction', {
       feePayer,
     });

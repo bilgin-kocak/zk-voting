@@ -6,7 +6,8 @@ const cors = require('cors');
 const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 const mongoose = require('mongoose');
 const Vote = require('./models/voteModel');
-
+const Secret = require('./models/secretModel');
+const { voteFHE, decryptVoteResult } = require('./encryption');
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
 
@@ -82,9 +83,9 @@ app.post('/offchain', async (req, res) => {
   }
 });
 
-app.get('/vote/:voteId', async (req, res) => {
+app.get('/vote/:zkAppAddress', async (req, res) => {
   try {
-    const vote = await Vote.findOne({ voteId: req.params.voteId });
+    const vote = await Vote.findOne({ zkAppAddress: req.params.zkAppAddress });
     if (!vote) {
       return res.status(404).send('Vote not found');
     }
@@ -102,7 +103,10 @@ app.post('/vote/create', async (req, res) => {
       voteName: req.body.voteName,
       voteDescription: req.body.voteDescription,
       eligibleVoterList: req.body.eligibleVoterList,
+      zkAppAddress: req.body.zkAppAddress,
       offchainCID: req.body.offchainCID,
+      startTimestamp: req.body.startTimestamp,
+      endTimestamp: req.body.endTimestamp,
     });
 
     const savedVote = await vote.save();
@@ -120,6 +124,11 @@ app.post('/vote/create', async (req, res) => {
 app.put('/votes/:voteId/addVoters', async (req, res) => {
   const { voteId } = req.params;
   const { votersToAdd } = req.body; // Expect an array of voter IDs
+
+  // Validate the request
+  if (!voteId || !votersToAdd || !Array.isArray(votersToAdd)) {
+    return res.status(400).send('Invalid request');
+  }
 
   try {
     // Update the document using $addToSet to ensure unique additions
@@ -139,10 +148,141 @@ app.put('/votes/:voteId/addVoters', async (req, res) => {
   }
 });
 
+// This route will return all votes that are currently active
 app.get('/votes', async (req, res) => {
   try {
-    const votes = await Vote.find({});
+    const now = Date.now();
+    const votes = await Vote.find({
+      startTimestamp: { $lte: now },
+      endTimestamp: { $gte: now },
+    });
     res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// This route will return all votes that are past
+app.get('/past-votes', async (req, res) => {
+  try {
+    const now = Date.now();
+    const votes = await Vote.find({
+      startTimestamp: { $gte: now },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// This route will return all votes that are future
+app.get('/future-votes', async (req, res) => {
+  try {
+    const now = Date.now();
+    const votes = await Vote.find({
+      endTimestamp: { $lte: now },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Get related votes by zkAppAddress
+// This won't return one vote, but all votes related to the zkAppAddress
+app.get('/votes/:zkAppAddress', async (req, res) => {
+  // Validate the request
+  if (!req.params.zkAppAddress) {
+    return res.status(400).send('Invalid request');
+  }
+  try {
+    // Get all votes related to the zkAppAddress
+    const votes = await Vote.find({
+      eligibleVoterList: { $elemMatch: { $eq: req.params.zkAppAddress } },
+    });
+    res.status(200).send(votes);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Vote encytpted
+app.get('/fhe-vote', async (req, res) => {
+  try {
+    const voteResult = req.body.voteResult;
+    const newVote = req.body.newVote;
+    const zkAppAddress = req.body.zkAppAddress;
+
+    // Validate the request
+    if (!voteResult || !newVote || !zkAppAddress) {
+      return res.status(400).send('Invalid request');
+    }
+
+    // If the vote is not found, return 404
+    const vote = await Vote.findOne({ zkAppAddress: zkAppAddress });
+    if (!vote) {
+      return res.status(404).send('Vote not found');
+    }
+
+    // If the vote is not active, return 400
+    const now = Date.now();
+    if (vote.startTimestamp > now || vote.endTimestamp < now) {
+      return res.status(400).send('Vote is not active');
+    }
+
+    // Get previous vote result
+    const previousVoteResult = vote.voteResult;
+    if (!previousVoteResult) {
+      return res.status(400).send('Vote result not found');
+    }
+
+    // Decrypt previous vote result
+    const secret = await Secret.findOne({ zkAppAddress: zkAppAddress });
+    if (!secret) {
+      return res.status(404).send('Secret not found');
+    }
+
+    const oldSecretKey = secret.secretKey;
+    const oldResult = await decryptVoteResult(oldSecretKey, previousVoteResult);
+
+    // Encrypt vote result
+    const result = await voteFHE(oldResult, newVote);
+
+    // save secret key to db
+    const secretKey = result.secretKey;
+    const newSecret = new Secret({
+      zkAppAddress: zkAppAddress,
+      secretKey: secretKey,
+    });
+
+    // Save the secret key to the database
+    newSecret.save();
+
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/decrypt-vote-result', async (req, res) => {
+  try {
+    const voteResultCipherText = req.body.voteResultCipherText;
+    const zkAppAddress = req.body.zkAppAddress;
+
+    // Validate the request
+    if (!voteResultCipherText || !zkAppAddress) {
+      return res.status(400).send('Invalid request');
+    }
+
+    const secret = await Secret.findOne({ zkAppAddress: zkAppAddress });
+    if (!secret) {
+      return res.status(404).send('Secret not found');
+    }
+
+    const secretKey = secret.secretKey;
+    const result = await decryptVoteResult(secretKey, voteResultCipherText);
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
   }

@@ -74,7 +74,11 @@ class OffChainStorage {
     this.nullifier = nullifier;
   }
 
-  updateOffChainState(nullifier: Nullifier, voteOption: bigint) {
+  updateOffChainState(
+    nullifier: Nullifier,
+    voteOption: bigint,
+    zkAppAddress: string
+  ) {
     // this.nullifierMerkleMap.set(nullifierHash, Field(1));
     const currentVote = this.voteCountMerkleTree.getNode(0, voteOption);
     console.log('Current Vote:', currentVote);
@@ -83,6 +87,28 @@ class OffChainStorage {
     this.nullifiers.push(nullifier.key());
     // Add increase vote options in voterCounts
     const index = Number(voteOption);
+    // Use FHE to add 1 to the vote count
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/fhe-vote`;
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    // Send get request with body parameters
+    // voteResult, newVote, zkAppAddress
+    const data = {
+      voteResult: this.voterCounts,
+      newVote: index,
+      zkAppAddress: zkAppAddress,
+    };
+    // Make the POST request
+    try {
+      const response = axios.get(url, {
+        headers: headers,
+        data: data,
+      });
+      console.log('Response:', response);
+    } catch (error) {
+      console.error(error);
+    }
     this.voterCounts[index] += 1;
   }
 
@@ -131,35 +157,10 @@ const functions = {
     const { verificationKey } = await state.Votes!.compile();
     state.verificationKey = verificationKey;
   },
-  deployContract: async (args: { publicKey58: string }) => {
-    const { Votes } = await import('@/contracts/build/src/Votes.js');
-    const publicKey = PublicKey.fromBase58(args.publicKey58);
 
-    const zkAppPrivateKey = PrivateKey.random();
-    const zkAppPrivateKey58 = zkAppPrivateKey.toBase58();
-
-    console.log('zkAppPrivateKey:', zkAppPrivateKey);
-    const zkAppAddress = zkAppPrivateKey.toPublicKey();
-    console.log('zkAppAddress:', zkAppAddress.toBase58());
-    const VotesCompiled = await Votes.compile();
-    console.log('VotesCompiled:', VotesCompiled);
-    const zkAppInstance = new Votes(zkAppAddress);
-
-    const transaction = await Mina.transaction(() => {
-      // AccountUpdate.fundNewAccount(args.publicKey58);
-      zkAppInstance.deploy({
-        zkappKey: zkAppPrivateKey,
-        verificationKey: VotesCompiled.verificationKey as VerificationKeyData,
-      });
-    });
-
-    // transaction.sign([zkAppPrivateKey]);
-    console.log('zkApp deployed');
-    // return transaction;
-    state.transaction = transaction;
-  },
-
-  createDeployTransaction: async (args: { feePayer: string }) => {
+  createDeployTransaction: async (args: {
+    feePayer: string;
+  }): Promise<string> => {
     if (state === null) {
       throw Error('state is null');
     }
@@ -176,7 +177,7 @@ const functions = {
 
     const feePayerPublickKey = PublicKey.fromBase58(args.feePayer);
     const transaction = await Mina.transaction(feePayerPublickKey, () => {
-      // AccountUpdate.fundNewAccount(feePayerPublickKey);
+      AccountUpdate.fundNewAccount(feePayerPublickKey);
       state.zkapp!.deploy({
         zkappKey: zkAppPrivateKey,
         verificationKey: state.verificationKey as VerificationKeyData,
@@ -184,6 +185,7 @@ const functions = {
     });
     transaction.sign([zkAppPrivateKey]);
     state.transaction = transaction;
+    return zkAppAddress.toBase58();
   },
 
   getDeployTransactionJSON: async (args: { publicKey58: string }) => {
@@ -271,7 +273,8 @@ const functions = {
 
     offChainInstance.updateOffChainState(
       state.offChainInstance!.nullifier,
-      option
+      option,
+      state.zkapp!.address.toBase58()
     );
 
     // Save the offChainInstance to file
