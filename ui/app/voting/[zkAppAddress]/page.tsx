@@ -225,25 +225,25 @@ export default function Voting({
 
       console.log('New Offchain State Uploaded');
 
-      console.log('Creating proof...');
-      await state.zkappWorkerClient!.proveTransaction();
+      // console.log('Creating proof...');
+      // await state.zkappWorkerClient!.proveTransaction();
 
-      console.log('Requesting send transaction...');
-      const transactionJSON =
-        await state.zkappWorkerClient!.getTransactionJSON();
+      // console.log('Requesting send transaction...');
+      // const transactionJSON =
+      //   await state.zkappWorkerClient!.getTransactionJSON();
 
-      console.log('Getting transaction JSON...');
-      const { hash } = await (window as any).mina.sendTransaction({
-        transaction: transactionJSON,
-        feePayer: {
-          fee: transactionFee,
-          memo: '',
-        },
-      });
+      // console.log('Getting transaction JSON...');
+      // const { hash } = await (window as any).mina.sendTransaction({
+      //   transaction: transactionJSON,
+      //   feePayer: {
+      //     fee: transactionFee,
+      //     memo: '',
+      //   },
+      // });
 
-      const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
-      console.log(`View transaction at ${transactionLink}`);
-      // setTransactionLink(transactionLink);
+      // const transactionLink = `https://berkeley.minaexplorer.com/transaction/${hash}`;
+      // console.log(`View transaction at ${transactionLink}`);
+      // // setTransactionLink(transactionLink);
       setState((prev) => ({ ...prev, voted: true }));
     } catch (error) {
       console.error(error);
@@ -271,7 +271,7 @@ export default function Voting({
         console.error(error);
       }
     };
-    // getVoting();
+    getVoting();
 
     getVotingResults();
   }, []);

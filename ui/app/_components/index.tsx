@@ -159,7 +159,7 @@ export default function Content() {
 
         // const zkappPublicKey = PublicKey.fromBase58(zkappPublicKeyImported);
         const zkappPublicKey = PublicKey.fromBase58(
-          'B62qrYyPzTkg5cDS4Rw3tmzKajqFfmJEeYUQmKehNehsLCXmZa6NSvH'
+          'B62qqn5neDForz8XymfRrZWEtV7Fww5fmLynx2iAnZUN5cM6ZGoJe8f'
         );
         await zkappWorkerClient.initZkappInstance(zkappPublicKey);
 

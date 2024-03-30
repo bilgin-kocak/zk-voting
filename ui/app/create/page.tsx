@@ -25,8 +25,10 @@ export default function Create() {
   const [votingStartDate, setVotingStartDate] = useState('');
   const [votingEndDate, setVotingEndDate] = useState('');
   const [currentStep, setCurrentStep] = useState('');
+  const [isActiveButton, setIsActiveButton] = useState(true);
 
   const handleCreateVoting = async () => {
+    setIsActiveButton(false);
     const eligibleAddressesArray = eligibleAddresses.split('\n');
 
     const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/create`;
@@ -119,11 +121,19 @@ export default function Create() {
 
     console.log('data', data);
 
+    await zkappWorkerClient.fetchAccount({
+      publicKey: publicKey!,
+    });
+
     // Initialize the contract
     await zkappWorkerClient.initZkappInstance(
       PublicKey.fromBase58(zkAppAddress)
     );
     setCurrentStep('Initializing zkApp instance...');
+
+    await zkappWorkerClient.fetchAccount({
+      publicKey: PublicKey.fromBase58(zkAppAddress),
+    });
 
     let isInitialized = await zkappWorkerClient.getIsInitialized();
     console.log('isInitialized', isInitialized);
@@ -160,6 +170,7 @@ export default function Create() {
     }
     console.log('ZkApp initialized');
     setCurrentStep('Contract Deployed and Initialized!');
+    setIsActiveButton(true);
   };
 
   return (
@@ -207,6 +218,7 @@ export default function Create() {
         <Button
           className={styles.button}
           onClick={handleCreateVoting}
+          disabled={!isActiveButton}
           text={currentStep ? currentStep : 'Create Voting'}
         />
 

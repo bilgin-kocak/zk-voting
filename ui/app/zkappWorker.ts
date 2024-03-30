@@ -88,7 +88,7 @@ class OffChainStorage {
     // Add increase vote options in voterCounts
     const index = Number(voteOption);
     // Use FHE to add 1 to the vote count
-    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}//fhe-vote`;
+    const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/fhe-vote`;
     const headers = {
       'Content-Type': 'application/json',
     };
