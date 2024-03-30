@@ -1,6 +1,6 @@
 const SEAL = require('node-seal');
 
-export async function voteFHE(voteResult, newVote) {
+async function voteFHE(voteResult, newVote) {
   const seal = await SEAL();
 
   const schemeType = seal.SchemeType.bfv;
@@ -61,7 +61,7 @@ export async function voteFHE(voteResult, newVote) {
   return result;
 }
 
-export async function decryptVoteResult(secretKey, voteResultCipherText) {
+async function decryptVoteResult(secretKey, voteResultCipherText) {
   const seal = await SEAL();
 
   const schemeType = seal.SchemeType.bfv;
@@ -97,3 +97,8 @@ export async function decryptVoteResult(secretKey, voteResultCipherText) {
   const result = encoder.decode(decryptedPlainText);
   return result;
 }
+
+module.exports = {
+  voteFHE,
+  decryptVoteResult,
+};
