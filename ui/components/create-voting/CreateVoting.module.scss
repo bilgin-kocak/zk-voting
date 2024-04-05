@@ -1,0 +1,15 @@
+.wizardContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .wizardControls {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        cursor: pointer;
+      }
+    }
+  }
