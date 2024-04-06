@@ -1,0 +1,27 @@
+.votingDetails {
+    .option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+  
+      .progressBar {
+        flex-grow: 1;
+        margin: 0 10px;
+        background-color: #eee;
+        position: relative;
+        height: 20px;
+        border-radius: 10px;
+  
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          border-radius: 10px;
+          background-color: #007bff;
+          width: 0%; 
+        }
+      }
+    }
+  }
