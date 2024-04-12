@@ -7,6 +7,8 @@ const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 const mongoose = require('mongoose');
 const Vote = require('./models/voteModel');
 const Secret = require('./models/secretModel');
+const User = require('./models/userModel');
+const Notification = require('./models/notificationModel');
 const { voteFHE, decryptVoteResult } = require('./encryption');
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
@@ -285,6 +287,19 @@ app.get('/decrypt-vote-result', async (req, res) => {
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
+  }
+});
+
+app.get('/dashboard/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    // const votings = await Voting.find({ createdBy: userId });
+    const notifications = await Notification.find({ user: userId });
+
+    res.json({ user, votings, notifications });
+  } catch (error) {
+    res.status(500).send('Server Error');
   }
 });
 

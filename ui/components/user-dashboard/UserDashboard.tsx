@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { VotingItem, Notification, UserProfile } from './interfaces';
+import axios from 'axios';
 import './UserDashboard.module.scss';
 
 const UserDashboard: React.FC = () => {
@@ -11,14 +12,23 @@ const UserDashboard: React.FC = () => {
   // Mock fetch functions - replace with actual data fetching logic
   useEffect(() => {
     // TODO: Fetch active votings from the server
-    setActiveVotings([]);
-    setVotingHistory([]);
-    setNotifications([]);
-    setUserProfile({
-      name: 'Bilgin Kocak',
-      email: 'kocak@gmail.com',
-      zkCredentials: 'EncryptedDataHere',
-    });
+    const fetchDashboardData = async () => {
+      // Send a request to the server to url /dashboard/:userId
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/dashboard/123`;
+      const response = await axios.get(url);
+
+      const data = response.data;
+      setActiveVotings(data.votings);
+      setNotifications(data.notifications);
+      // setUserProfile(data.user);
+      setUserProfile({
+        name: 'Bilgin Kocak',
+        email: 'kocak@gmail.com',
+        zkCredentials: 'EncryptedDataHere',
+      });
+    };
+
+    fetchDashboardData();
   }, []);
 
   const markNotificationAsRead = (notificationId: string) => {
