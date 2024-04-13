@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@lighthouse-web3/sdk": "^0.3.0",
+    "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-progress": "^1.0.3",
     "@radix-ui/themes": "^2.0.3",
     "axios": "^1.6.5",
