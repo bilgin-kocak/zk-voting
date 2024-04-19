@@ -9,6 +9,8 @@ const Vote = require('./models/voteModel');
 const Secret = require('./models/secretModel');
 const User = require('./models/userModel');
 const Notification = require('./models/notificationModel');
+const votingAnalyticsController = require('../controllers/voting-analytics');
+const { check, validationResult } = require('express-validator');
 const { voteFHE, decryptVoteResult } = require('./encryption');
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
@@ -302,6 +304,34 @@ app.get('/dashboard/:userId', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+router.get('/analytics/turnout', votingAnalyticsController.getVoterTurnout);
+router.get(
+  '/analytics/demographics',
+  votingAnalyticsController.getDemographicInfo
+);
+router.post(
+  '/analytics',
+  [
+    check('date')
+      .isISO8601()
+      .withMessage('Date must be a valid ISO 8601 date string'),
+    check('votes').isNumeric().withMessage('Votes must be a numeric value'),
+    check('demographicInfo.ageGroup')
+      .isString()
+      .withMessage('Age group must be a string'),
+    check('demographicInfo.region')
+      .isString()
+      .withMessage('Region must be a string'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    votingController.createVoting(req, res);
+  }
+);
 
 // Start the server
 app.listen(port, () => {
