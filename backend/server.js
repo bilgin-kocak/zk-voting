@@ -12,6 +12,8 @@ const Notification = require('./models/notificationModel');
 const votingAnalyticsController = require('../controllers/voting-analytics');
 const { check, validationResult } = require('express-validator');
 const { voteFHE, decryptVoteResult } = require('./encryption');
+const forumRoutes = require('./routes/forumRoutes');
+
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
 
@@ -332,6 +334,8 @@ router.post(
     votingController.createVoting(req, res);
   }
 );
+
+app.use('/api/forum', forumRoutes);
 
 // Start the server
 app.listen(port, () => {
