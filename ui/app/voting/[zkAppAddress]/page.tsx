@@ -10,6 +10,9 @@ import { Alert } from '@/components/alert/Alert';
 import { useLocalStorage } from '@/hooks';
 import { Nullifier, PrivateKey } from 'o1js';
 import type ZkappWorkerClient from '../../zkappWorkerClient';
+import VotingDetails, {
+  VotingDetailsProps,
+} from '@/components/voting-details/VotingDetails';
 
 let transactionFee = 0.1;
 
@@ -45,6 +48,41 @@ export default function Voting({
 
   const [votingResult, setVotingResult] = useState<number[]>([]);
   console.log('votingResult', votingResult);
+
+  const [votingDetails, setVotingDetails] = useState<VotingDetailsProps>({
+    title: '',
+    description: '',
+    criteria: '',
+    options: [
+      {
+        name: '',
+        count: 0,
+      },
+    ],
+    totalVotes: 0,
+    status: 'active',
+  });
+
+  // Get voting details from the server
+  useEffect(() => {
+    const getVotingDetails = async () => {
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/vote/${params.zkAppAddress}`;
+      console.log;
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      try {
+        const data = await axios.get(url, {
+          headers,
+        });
+        console.log('votingDetails', data);
+        setVotingDetails(data.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getVotingDetails();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -373,6 +411,7 @@ export default function Voting({
               />
             </>
           )}
+          <VotingDetails {...votingDetails} />
         </div>
       </div>
     </div>

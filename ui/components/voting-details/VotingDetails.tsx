@@ -2,12 +2,12 @@ import React from 'react';
 import * as Progress from '@radix-ui/react-progress';
 import './VotingDetails.scss';
 
-interface VotingOption {
+export interface VotingOption {
   name: string;
   count: number;
 }
 
-interface VotingDetailsProps {
+export interface VotingDetailsProps {
   title: string;
   description: string;
   criteria: string;
