@@ -1,6 +1,7 @@
 import React from 'react';
 import * as Progress from '@radix-ui/react-progress';
-import './VotingDetails.scss';
+import './VotingDetails.module.scss';
+import CommunityForum from '../community-forum/CommunityForum';
 
 export interface VotingOption {
   name: string;
@@ -31,21 +32,22 @@ const VotingDetails: React.FC<VotingDetailsProps> = ({
       <p>{description}</p>
       <div>Status: {status}</div>
       <h3>Results</h3>
-      {options.map((option) => (
-        <div key={option.name} className="option">
-          <span>{option.name}</span>
-          <Progress.Root
-            value={option.count}
-            max={totalVotes}
-            className="progressBar"
-          >
-            <Progress.Indicator
-              style={{ width: `${(option.count / totalVotes) * 100}%` }}
-            />
-          </Progress.Root>
-          <span>{option.count} votes</span>
-        </div>
-      ))}
+      {options &&
+        options.map((option) => (
+          <div key={option.name} className="option">
+            <span>{option.name}</span>
+            <Progress.Root
+              value={option.count}
+              max={totalVotes}
+              className="progressBar"
+            >
+              <Progress.Indicator
+                style={{ width: `${(option.count / totalVotes) * 100}%` }}
+              />
+            </Progress.Root>
+            <span>{option.count} votes</span>
+          </div>
+        ))}
       <h3>Criteria</h3>
       <p>{criteria}</p>
       {/* FAQ Section */}
@@ -54,6 +56,7 @@ const VotingDetails: React.FC<VotingDetailsProps> = ({
         Here you can add commonly asked questions and answers about the voting
         process.
       </p>
+      <CommunityForum />
     </div>
   );
 };

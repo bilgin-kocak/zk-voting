@@ -356,8 +356,8 @@ export default function Voting({
           <>
             <h1>{voting.voteName}</h1>
             <p>{voting.voteDescription}</p>
-            <p>Start: {voting.startTimestamp}</p>
-            <p>End: {voting.endTimestamp}</p>
+            <p>Start: {new Date(voting.startTimestamp).toString()}</p>
+            <p>End: {new Date(voting.endTimestamp).toString()}</p>
             <p>Voting Contract {params.zkAppAddress}</p>
           </>
         ) : (
