@@ -1,55 +1,55 @@
 import React from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
-import './EducationalResources.module.scss';
+import styles from './EducationalResources.module.scss';
 
 const EducationalResources: React.FC = () => {
   return (
-    <div className="educationalResources">
+    <div className={styles.educationalResources}>
       <h1>Educational Resources</h1>
-      <Accordion.Root type="single" collapsible>
+      <Accordion.Root type="single" collapsible className={styles.accordion}>
         <Accordion.Item value="articles">
-          <Accordion.Header>
-            <Accordion.Trigger>
+          <Accordion.Header className={styles.headers}>
+            <Accordion.Trigger className={styles.trigger}>
               Articles on Privacy and Blockchain Voting
             </Accordion.Trigger>
           </Accordion.Header>
-          <Accordion.Content>
+          <Accordion.Content className={styles.content}>
             <div>
               <h3>Understanding Blockchain Voting: A Privacy Perspective</h3>
               <p>
                 Discuss how blockchain technology can ensure voter privacy and
                 enhance the integrity of elections.
               </p>
-              <a href="" target="_blank" rel="noopener noreferrer">
-                Read more
-              </a>
-            </div>
-            <div>
-              <h3>Case Study: Estonia&apos;s Digital Voting System</h3>
-              <p>
-                Explore how Estonia has implemented blockchain technology in its
-                digital voting system and the impact on voter privacy.
-              </p>
-              <a href="" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://ieeexplore.ieee.org/document/9751618"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.backlink}
+              >
                 Read more
               </a>
             </div>
           </Accordion.Content>
         </Accordion.Item>
         <Accordion.Item value="tutorials">
-          <Accordion.Header>
-            <Accordion.Trigger>
+          <Accordion.Header className={styles.headers}>
+            <Accordion.Trigger className={styles.trigger}>
               Tutorials on Using the Voting Application
             </Accordion.Trigger>
           </Accordion.Header>
-          <Accordion.Content>
+          <Accordion.Content className={styles.content}>
             <div>
               <h3>Getting Started with Blockchain-Based Voting</h3>
               <p>
                 A beginner&apos;s guide on how to use a blockchain voting
                 application.
               </p>
-              <a href="" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://www.hindawi.com/journals/mpe/2024/5591147/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.backlink}
+              >
                 Start here
               </a>
             </div>
@@ -59,19 +59,24 @@ const EducationalResources: React.FC = () => {
                 Answers to common questions about blockchain voting to help
                 users understand the voting process.
               </p>
-              <a href="" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://epthinktank.eu/2019/07/17/3-key-questions-on-blockchain-voting/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.backlink}
+              >
                 View FAQs
               </a>
             </div>
           </Accordion.Content>
         </Accordion.Item>
         <Accordion.Item value="videos">
-          <Accordion.Header>
-            <Accordion.Trigger>
+          <Accordion.Header className={styles.headers}>
+            <Accordion.Trigger className={styles.trigger}>
               Videos on Zero-Knowledge Proofs
             </Accordion.Trigger>
           </Accordion.Header>
-          <Accordion.Content>
+          <Accordion.Content className={styles.content}>
             <div>
               <h3>What are Zero-Knowledge Proofs?</h3>
               <p>
@@ -79,9 +84,10 @@ const EducationalResources: React.FC = () => {
                 proofs and their importance.
               </p>
               <a
-                href="https://www.youtube.com"
+                href="https://www.youtube.com/watch?v=GvwYJDzzI-g"
                 target="_blank"
                 rel="noopener noreferrer"
+                className={styles.backlink}
               >
                 Watch video
               </a>
@@ -95,9 +101,10 @@ const EducationalResources: React.FC = () => {
                 zero-knowledge proofs.
               </p>
               <a
-                href="https://www.youtube.com/watch"
+                href="https://www.youtube.com/watch?v=uchjTIlPzFo&list=PLS01nW3Rtgor_yJmQsGBZAg5XM4TSGpPs"
                 target="_blank"
                 rel="noopener noreferrer"
+                className={styles.backlink}
               >
                 Explore more
               </a>

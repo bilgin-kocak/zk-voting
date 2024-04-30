@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
 import axios from 'axios';
-import './CommunityForum.module.scss';
+import styles from './CommunityForum.module.scss';
+import {
+  Container,
+  TextArea,
+  Box,
+  Flex,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
 
 interface Post {
   _id: string;
   category: string;
   title: string;
   content: string;
-  createdBy: string; // Simplified, depending on your user model
+  createdBy: string;
   createdAt: string;
 }
 
@@ -23,7 +31,7 @@ const CommunityForum: React.FC = () => {
       const result = await axios.get('/api/forum');
       setPosts(result.data);
     };
-    fetchPosts();
+    // fetchPosts();
   }, []);
 
   const handlePostSubmit = async (event: React.FormEvent) => {
@@ -33,7 +41,7 @@ const CommunityForum: React.FC = () => {
         title: newPostTitle,
         content: newPostContent,
         category: selectedCategory,
-        createdBy: 'UserID', // This should be replaced with actual user ID from session or JWT
+        createdBy: 'UserID',
       });
       setPosts([...posts, response.data]);
       setNewPostContent('');
@@ -44,52 +52,83 @@ const CommunityForum: React.FC = () => {
   };
 
   return (
-    <div className="communityForum">
+    <div className={styles.communityForum}>
       <h1>Community Forum</h1>
-      <Accordion.Root type="single" collapsible>
+      {/* <Accordion.Root type="single" collapsible className={styles.accordion}>
         {['general', 'policies', 'support'].map((category) => (
           <Accordion.Item key={category} value={category}>
-            <Accordion.Header>
-              <Accordion.Trigger>
+            <Accordion.Header className={styles.header}>
+              <Accordion.Trigger className={styles.trigger}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}{' '}
                 Discussions
               </Accordion.Trigger>
             </Accordion.Header>
-            <Accordion.Content>
-              <form onSubmit={handlePostSubmit}>
-                <input
-                  type="text"
-                  value={newPostTitle}
-                  onChange={(e) => setNewPostTitle(e.target.value)}
-                  placeholder="Title of your post"
-                  required
-                />
-                <textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="Type your message here..."
-                  required
-                />
-                <button type="submit">Submit</button>
-              </form>
-              <ul>
-                {posts
-                  .filter((post) => post.category === category)
-                  .map((post) => (
-                    <li key={post._id}>
-                      <h3>{post.title}</h3>
-                      <p>{post.content}</p>
-                      <small>
-                        Posted by {post.createdBy} on{' '}
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </small>
-                    </li>
-                  ))}
-              </ul>
-            </Accordion.Content>
+            <Accordion.Content className={styles.content}> */}
+      <Container>
+        <Flex gap="3" direction="column">
+          <label htmlFor="post-title">Post title</label>
+          <input
+            id="voting-name"
+            type="text"
+            placeholder="Title of your post"
+            value={newPostTitle}
+            onChange={(e) => setNewPostTitle(e.target.value)}
+          />
+
+          <label htmlFor="post-message">Post your messages</label>
+          <textarea
+            id="voting-description"
+            value={newPostContent}
+            placeholder="Type your message here..."
+            onChange={(e) => setNewPostContent(e.target.value)}
+          />
+          <button
+            type="submit"
+            className={styles.button}
+            onClick={handlePostSubmit}
+          >
+            Submit
+          </button>
+        </Flex>
+      </Container>
+      {/* <form onSubmit={handlePostSubmit}>
+        <input
+          type="text"
+          value={newPostTitle}
+          onChange={(e) => setNewPostTitle(e.target.value)}
+          placeholder="Title of your post"
+          required
+          className={styles.input}
+        />
+        <textarea
+          value={newPostContent}
+          onChange={(e) => setNewPostContent(e.target.value)}
+          placeholder="Type your message here..."
+          required
+          className={styles.textarea}
+        />
+        <button type="submit" className={styles.button}>
+          Submit
+        </button>
+      </form> */}
+      <ul className={styles.postsList}>
+        {posts
+          // .filter((post) => post.category === category)
+          .map((post) => (
+            <li key={post._id} className={styles.postItem}>
+              <h3>{post.title}</h3>
+              <p>{post.content}</p>
+              <small>
+                Posted by {post.createdBy} on{' '}
+                {new Date(post.createdAt).toLocaleDateString()}
+              </small>
+            </li>
+          ))}
+      </ul>
+      {/* </Accordion.Content>
           </Accordion.Item>
         ))}
-      </Accordion.Root>
+      </Accordion.Root> */}
     </div>
   );
 };

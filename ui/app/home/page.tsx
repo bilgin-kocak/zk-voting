@@ -14,7 +14,7 @@ export default function ListVoting() {
         <Button className={styles.button} href="/list" text="See All Voting" />
       </div>
 
-      <EducationalResources />
+      {/* <EducationalResources /> */}
     </div>
   );
 }

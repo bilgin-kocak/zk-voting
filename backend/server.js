@@ -9,10 +9,10 @@ const Vote = require('./models/voteModel');
 const Secret = require('./models/secretModel');
 const User = require('./models/userModel');
 const Notification = require('./models/notificationModel');
-const votingAnalyticsController = require('../controllers/voting-analytics');
+const votingAnalyticsController = require('./controllers/voting-analytics');
 const { check, validationResult } = require('express-validator');
 const { voteFHE, decryptVoteResult } = require('./encryption');
-const forumRoutes = require('./routes/forumRoutes');
+const forumRouters = require('./routers/forumRouters');
 
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
@@ -307,12 +307,12 @@ app.get('/dashboard/:userId', async (req, res) => {
   }
 });
 
-router.get('/analytics/turnout', votingAnalyticsController.getVoterTurnout);
-router.get(
+app.get('/analytics/turnout', votingAnalyticsController.getVoterTurnout);
+app.get(
   '/analytics/demographics',
   votingAnalyticsController.getDemographicInfo
 );
-router.post(
+app.post(
   '/analytics',
   [
     check('date')
@@ -335,7 +335,7 @@ router.post(
   }
 );
 
-app.use('/api/forum', forumRoutes);
+app.use('/api/forum', forumRouters);
 
 // Start the server
 app.listen(port, () => {

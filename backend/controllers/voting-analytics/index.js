@@ -1,4 +1,4 @@
-const VotingAnalytics = require('../../models/VotingAnalyticsModel');
+const VotingAnalytics = require('../../models/VoteAnalyticsModel');
 
 exports.getVoterTurnout = async (req, res) => {
   try {
