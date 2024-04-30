@@ -7,7 +7,13 @@ const { uploadBuffer, uploadText, pinataUploadJson } = require('./utils');
 const mongoose = require('mongoose');
 const Vote = require('./models/voteModel');
 const Secret = require('./models/secretModel');
+const User = require('./models/userModel');
+const Notification = require('./models/notificationModel');
+const votingAnalyticsController = require('./controllers/voting-analytics');
+const { check, validationResult } = require('express-validator');
 const { voteFHE, decryptVoteResult } = require('./encryption');
+const forumRouters = require('./routers/forumRouters');
+
 const app = express();
 const port = process.env.PORT || 3001; // You can choose any available port
 
@@ -287,6 +293,49 @@ app.get('/decrypt-vote-result', async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+app.get('/dashboard/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    // const votings = await Voting.find({ createdBy: userId });
+    const notifications = await Notification.find({ user: userId });
+
+    res.json({ user, votings, notifications });
+  } catch (error) {
+    res.status(500).send('Server Error');
+  }
+});
+
+app.get('/analytics/turnout', votingAnalyticsController.getVoterTurnout);
+app.get(
+  '/analytics/demographics',
+  votingAnalyticsController.getDemographicInfo
+);
+app.post(
+  '/analytics',
+  [
+    check('date')
+      .isISO8601()
+      .withMessage('Date must be a valid ISO 8601 date string'),
+    check('votes').isNumeric().withMessage('Votes must be a numeric value'),
+    check('demographicInfo.ageGroup')
+      .isString()
+      .withMessage('Age group must be a string'),
+    check('demographicInfo.region')
+      .isString()
+      .withMessage('Region must be a string'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    votingController.createVoting(req, res);
+  }
+);
+
+app.use('/api/forum', forumRouters);
 
 // Start the server
 app.listen(port, () => {

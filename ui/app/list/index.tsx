@@ -6,6 +6,7 @@ import cn from 'classnames';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { VotingCard } from '@/components/voting-card/VotingCard';
+import EducationalResources from '@/components/educational-resources/EducationalResources';
 
 export default function ListVoting() {
   const [votings, setVotings] = useState<any[]>([]);
@@ -52,6 +53,7 @@ export default function ListVoting() {
           text="Your Voting"
         />
         <Button className={styles.button} href="/" text="Go back" />
+        <EducationalResources />
       </div>
     </div>
   );

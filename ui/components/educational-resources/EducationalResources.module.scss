@@ -1,0 +1,57 @@
+.educationalResources {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    // background: #f9f9f9;
+    // border-radius: 10px;
+    // box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .accordion {
+    // border-top: 1px solid #ccc;
+  }
+  
+  .headers {
+    background-color: #ff603b;
+    color: white;
+    padding: 5px 10px;
+    margin-top: 15px;
+    cursor: pointer;
+    user-select: none;
+    border: none;
+    outline: none;
+    transition: background-color 0.3s ease;
+    border-radius: 100px;
+    width: 100%;
+    font-size: medium;
+    
+    &:hover, &:focus {
+      background-color: #005fa3;
+    }
+  }
+  
+  .trigger {
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  
+  .content {
+    padding: 20px;
+    // border-top: 1px solid #ccc;
+    // background-color: #fff;
+  }
+  .backlink {
+    color: #0077cc;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }

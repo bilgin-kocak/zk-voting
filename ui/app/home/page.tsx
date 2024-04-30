@@ -2,6 +2,7 @@ import { Button } from '@/components/button/Button';
 import Candidates from '../_components/candidates/candidates';
 import styles from './page.module.scss';
 import cn from 'classnames';
+import EducationalResources from '@/components/educational-resources/EducationalResources';
 
 export default function ListVoting() {
   return (
@@ -12,6 +13,8 @@ export default function ListVoting() {
         <h1>Or see all the voting</h1>
         <Button className={styles.button} href="/list" text="See All Voting" />
       </div>
+
+      {/* <EducationalResources /> */}
     </div>
   );
 }
